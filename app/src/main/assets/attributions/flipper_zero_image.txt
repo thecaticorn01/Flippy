@@ -1,0 +1,4 @@
+﻿Flipper Zero image used in widget:
+Source: https://commons.wikimedia.org/wiki/File:FIipper_Zero.png
+License: CC BY-SA 4.0
+Author: Wikimedia contributors

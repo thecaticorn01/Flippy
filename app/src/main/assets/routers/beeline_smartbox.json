@@ -1,0 +1,19 @@
+{
+  "vendor": "Beeline",
+  "detectionKeyword": "smartbox",
+  "defaultLogins": [["admin", "admin"], ["admin", "1234"], ["admin", "beeline"], ["admin", "vodafone"]],
+  "authEndpoint": "/cgi-bin/auth.cgi",
+  "kickEndpoint": "/cgi-bin/block_mac.cgi",
+  "payloadTemplate": "{ \"mac\": \"$TARGET_MAC\", \"action\": \"block\" }",
+  "method": "POST",
+  "headers": {
+    "Content-Type": "application/x-www-form-urlencoded"
+  },
+  "rebootEndpoint": "/cgi-bin/emergency.cgi?action=reboot",
+  "infoEndpoint": "/cgi-bin/status.cgi",
+  "wifiEndpoint": "/cgi-bin/wifi.cgi",
+  "authType": "form",
+  "authUsernameField": "user",
+  "authPasswordField": "password",
+  "authSuccessIndicator": "success"
+}

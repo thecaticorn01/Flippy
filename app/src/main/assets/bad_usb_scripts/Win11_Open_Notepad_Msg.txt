@@ -1,0 +1,8 @@
+REM Open Notepad and type message
+DELAY 500
+GUI r
+DELAY 200
+STRINGLN notepad
+DELAY 1000
+STRINGLN You have been pwned by Flippy!
+STRINGLN Happy hacking.

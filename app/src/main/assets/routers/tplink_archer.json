@@ -1,0 +1,19 @@
+{
+  "vendor": "TP-Link",
+  "detectionKeyword": "archer",
+  "defaultLogins": [["admin", "admin"], ["admin", "1234"], ["admin", "tplink"], ["admin", "tplink123"], ["admin", "archer"]],
+  "authEndpoint": "/cgi-bin/luci/;stok=/login?form=login",
+  "kickEndpoint": "/cgi-bin/luci/;stok=$STOK/admin/access_control?form=block",
+  "payloadTemplate": "operation=write&mac=$TARGET_MAC&enable=on",
+  "method": "POST",
+  "headers": {
+    "Content-Type": "application/x-www-form-urlencoded"
+  },
+  "rebootEndpoint": "/cgi-bin/luci/;stok=$STOK/admin/system?form=reboot",
+  "infoEndpoint": "/cgi-bin/luci/;stok=$STOK/admin/status?form=overview",
+  "wifiEndpoint": "/cgi-bin/luci/;stok=$STOK/admin/wireless?form=status",
+  "authType": "form",
+  "authUsernameField": "user",
+  "authPasswordField": "pass",
+  "authSuccessIndicator": "stok"
+}

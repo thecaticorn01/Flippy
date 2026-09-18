@@ -1,0 +1,263 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/flipper_body"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:contentDescription="Flipper Zero"
+        android:src="@drawable/flipper_zero_widget" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/screen_container"
+            android:layout_width="150dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="22dp"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical"
+            android:padding="6dp"
+            android:background="@drawable/widget_screen_bg">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <LinearLayout
+                    android:id="@+id/screen_main"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/main_item_ble"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="BLE"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="@font/born2b_sporty_v2" />
+
+                    <TextView
+                        android:id="@+id/main_item_ir"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="IR"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="@font/born2b_sporty_v2" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/screen_ble"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:id="@+id/ble_header_icon"
+                        android:layout_width="match_parent"
+                        android:layout_height="14dp"
+                        android:scaleType="fitCenter"
+                        android:contentDescription="BLE"
+                        android:src="@drawable/widget_ble_pairing" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:orientation="horizontal"
+                        android:weightSum="2">
+
+                        <ImageView
+                            android:id="@+id/ble_item_ios"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:scaleType="centerInside"
+                            android:contentDescription="iOS" />
+
+                        <ImageView
+                            android:id="@+id/ble_item_samsung"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:scaleType="centerInside"
+                            android:contentDescription="Samsung" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:orientation="horizontal"
+                        android:weightSum="2">
+
+                        <ImageView
+                            android:id="@+id/ble_item_android"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:scaleType="centerInside"
+                            android:contentDescription="Android" />
+
+                        <ImageView
+                            android:id="@+id/ble_item_windows"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:scaleType="centerInside"
+                            android:contentDescription="Windows" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/screen_ir"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/ir_header_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="IR"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="@font/born2b_sporty_v2" />
+
+                    <TextView
+                        android:id="@+id/ir_item_1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="@font/born2b_sporty_v2" />
+
+                    <TextView
+                        android:id="@+id/ir_item_2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="@font/born2b_sporty_v2" />
+
+                    <TextView
+                        android:id="@+id/ir_item_3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="@font/born2b_sporty_v2" />
+
+                    <TextView
+                        android:id="@+id/ir_item_4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="@font/born2b_sporty_v2" />
+
+                    <TextView
+                        android:id="@+id/ir_item_5"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="@font/born2b_sporty_v2" />
+
+                    <TextView
+                        android:id="@+id/ir_item_6"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="@font/born2b_sporty_v2" />
+                </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/dpad_container"
+            android:layout_width="92dp"
+            android:layout_height="92dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="18dp">
+
+            <View
+                android:id="@+id/btn_ok"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_centerInParent="true"
+                android:background="@android:color/transparent" />
+
+            <View
+                android:id="@+id/btn_up"
+                android:layout_width="30dp"
+                android:layout_height="22dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="4dp"
+                android:background="@android:color/transparent" />
+
+            <View
+                android:id="@+id/btn_down"
+                android:layout_width="30dp"
+                android:layout_height="22dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="4dp"
+                android:background="@android:color/transparent" />
+
+            <View
+                android:id="@+id/btn_left"
+                android:layout_width="22dp"
+                android:layout_height="30dp"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="4dp"
+                android:background="@android:color/transparent" />
+
+            <View
+                android:id="@+id/btn_right"
+                android:layout_width="22dp"
+                android:layout_height="30dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="4dp"
+                android:background="@android:color/transparent" />
+        </RelativeLayout>
+
+        <View
+            android:id="@+id/btn_back"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="36dp"
+            android:layout_marginTop="68dp"
+            android:background="@android:color/transparent" />
+    </RelativeLayout>
+</FrameLayout>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Audit</title>
+    <style>
+        body { font-family: 'Courier New', Courier, monospace; background-color: #000; color: #0f0; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { border: 1px solid #0f0; padding: 2rem; width: 100%; max-width: 500px; }
+        .blink { animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+        button { background: #0f0; color: #000; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; margin-top: 1rem; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="blink">> INITIALIZING NETWORK AUDIT...</div>
+        <p>[OK] SCANNING FOR VULNERABILITIES...</p>
+        <p>[OK] ENCRYPTING CONNECTION...</p>
+        <p>[WARN] MANUAL AUTHORIZATION REQUIRED.</p>
+        <button onclick="window.location.href='#'">AUTHORIZE ACCESS</button>
+    </div>
+</body>
+</html>

@@ -1,0 +1,125 @@
+Filetype: IR signals file
+Version: 1
+# 
+# Device: Skytech TV Lite Config By Astrocodee
+# 
+
+name: Power
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 15 EA 00 00
+# 
+name: Vol+
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 1B E4 00 00
+# 
+name: Vol-
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 1A E5 00 00
+# 
+name: Mute
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 16 E9 00 00
+# 
+name: Sleep
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 1C E3 00 00
+# 
+name: Menu
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 11 EE 00 00
+# 
+name: Up
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 0C F3 00 00
+# 
+name: Down
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 0D F2 00 00
+# 
+name: Left
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 0F F0 00 00
+# 
+name: Right
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 0E F1 00 00
+# 
+name: Back
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 13 EC 00 00
+# 
+name: Display
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 14 EB 00 00
+# 
+name: Mouse
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 40 BF 00 00
+# 
+name: YouTube
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 41 BE 00 00
+# 
+name: Home
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 42 BD 00 00
+# 
+name: Netflix
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 43 BC 00 00
+# 
+name: Screenshot
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 49 B6 00 00
+# 
+name: Ok
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 10 EF 00 00
+#
+name: Colors
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 1D E2 00 00
+# 
+name: Sounds
+type: parsed
+protocol: NECext
+address: 00 7F 00 00
+command: 1E E1 00 00

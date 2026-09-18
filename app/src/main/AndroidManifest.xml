@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES"
+        android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    
+    <uses-permission android:name="android.permission.TRANSMIT_IR" />
+
+    
+    <uses-permission android:name="rikka.shizuku.permission.API_V23" />
+    <uses-permission android:name="moe.shizuku.privileged.api.permission.BIND_SHIZUKU_SERVICE" />
+
+    
+    <uses-permission android:name="android.permission.TETHER_PRIVILEGED" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
+
+    <queries>
+        <package android:name="moe.shizuku.privileged.api" />
+        <intent>
+            <action android:name="moe.shizuku.privileged.api.SERVICE" />
+        </intent>
+        <provider android:authorities="moe.shizuku.privileged.api" />
+    </queries>
+
+    
+    <uses-feature android:name="android.hardware.consumerir" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.compass" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.light" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.proximity" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
+    <uses-feature android:name="android.hardware.nfc" android:required="false" />
+    <uses-feature android:name="android.hardware.nfc.hce" android:required="false" />
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+
+    <application
+        android:name=".FlippyApplication"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
+        android:extractNativeLibs="true"
+        android:theme="@style/Theme.Flippy"
+        tools:replace="android:extractNativeLibs">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboard|keyboardHidden|locale|layoutDirection|fontScale|uiMode"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Flippy.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            
+            <intent-filter>
+                <action android:name="android.nfc.action.TAG_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            
+            <intent-filter>
+                <action android:name="android.nfc.action.TECH_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.action.TECH_DISCOVERED"
+                android:resource="@xml/nfc_tech_filter" />
+
+            
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="http" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="https" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/x-vcard" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/vcard" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/vnd.wfa.wsc" />
+            </intent-filter>
+
+            
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/usb_ir_device_filter" />
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.dolphyplugin" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="application/x-dolphy-plugin" />
+            </intent-filter>
+        </activity>
+        
+        <activity
+            android:name=".hid.HidKeyboardActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboard|keyboardHidden|locale|layoutDirection|fontScale|uiMode"
+            android:label="HID клавиатура"
+            android:theme="@style/Theme.Flippy" />
+
+        <service
+            android:name=".nfc.NfcType4HostApduService"
+            android:description="@string/app_name"
+            android:exported="true"
+            android:permission="android.permission.BIND_NFC_SERVICE">
+            <intent-filter>
+                <action android:name="android.nfc.cardemulation.action.HOST_APDU_SERVICE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.cardemulation.host_apdu_service"
+                android:resource="@xml/nfc_type4_apdu_service" />
+        </service>
+
+        <service
+            android:name=".hid.KeyboardService"
+            android:exported="false"
+            android:stopWithTask="false" />
+
+        <service
+            android:name=".bluetooth.audio.BluetoothStressService"
+            android:exported="false"
+            android:stopWithTask="false" />
+
+        <service
+            android:name=".qr.server.QrSpooferService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+            android:stopWithTask="false" />
+
+        <receiver
+            android:name=".BleSpamWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.droid.flippy.action.TOGGLE_IOS" />
+                <action android:name="com.droid.flippy.action.TOGGLE_SAMSUNG" />
+                <action android:name="com.droid.flippy.action.TOGGLE_ANDROID" />
+                <action android:name="com.droid.flippy.action.TOGGLE_WINDOWS" />
+                <action android:name="com.droid.flippy.action.BLE_STOP_ALL" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/ble_spam_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".FlipperWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.droid.flippy.action.FLIPPER_WIDGET_UP" />
+                <action android:name="com.droid.flippy.action.FLIPPER_WIDGET_DOWN" />
+                <action android:name="com.droid.flippy.action.FLIPPER_WIDGET_LEFT" />
+                <action android:name="com.droid.flippy.action.FLIPPER_WIDGET_RIGHT" />
+                <action android:name="com.droid.flippy.action.FLIPPER_WIDGET_OK" />
+                <action android:name="com.droid.flippy.action.FLIPPER_WIDGET_BACK" />
+                <action android:name="com.droid.flippy.action.FLIPPER_WIDGET_BLE_IOS" />
+                <action android:name="com.droid.flippy.action.FLIPPER_WIDGET_BLE_SAMSUNG" />
+                <action android:name="com.droid.flippy.action.FLIPPER_WIDGET_BLE_ANDROID" />
+                <action android:name="com.droid.flippy.action.FLIPPER_WIDGET_BLE_WINDOWS" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/flipper_widget_info" />
+        </receiver>
+
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:exported="true"
+            android:enabled="true"
+            android:grantUriPermissions="false"
+            android:multiprocess="false" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/whisperpair_file_paths" />
+        </provider>
+    </application>
+
+</manifest>

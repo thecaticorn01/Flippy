@@ -1,0 +1,7 @@
+REM Powershell Matrix effect
+DELAY 500
+GUI r
+DELAY 200
+STRINGLN powershell
+DELAY 800
+STRINGLN cls; $Host.UI.RawUI.ForegroundColor = 'Green'; while($true) { Write-Host -NoNewline (Get-Random -Minimum 0 -Maximum 2); if((Get-Random -Minimum 0 -Maximum 10) -eq 0) { Write-Host '' } }

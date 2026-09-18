@@ -1,0 +1,35 @@
+Filetype: IR signals file
+Version: 1
+#
+# LG Banner Remote AKB74915384
+#
+name: POWER
+type: parsed
+protocol: NEC
+address: 20 DF 00 00
+command: 10 EF 00 00
+#
+name: VOL_UP
+type: parsed
+protocol: NEC
+address: 20 DF 00 00
+command: 40 BF 00 00
+#
+name: VOL_DOWN
+type: parsed
+protocol: NEC
+address: 20 DF 00 00
+command: C0 3F 00 00
+#
+name: MUTE
+type: parsed
+protocol: NEC
+address: 20 DF 00 00
+command: 00 FF 00 00
+#
+name: INPUT
+type: parsed
+protocol: NEC
+address: 20 DF 00 00
+command: D0 2F 00 00
+

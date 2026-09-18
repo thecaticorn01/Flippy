@@ -1,0 +1,7 @@
+REM Fake Windows Update
+DELAY 500
+GUI r
+DELAY 200
+STRINGLN https://updatefaker.com/windows11/index.html
+DELAY 1000
+F11

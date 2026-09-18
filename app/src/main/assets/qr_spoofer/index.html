@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Система</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; background: #000; color: #fff; }
+        .page { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; text-align: center; }
+        .active { display: flex; }
+
+        #status-dot { position: fixed; top: 10px; right: 10px; width: 6px; height: 6px; border-radius: 50%; background: #333; z-index: 1000; }
+        .online { background: #0f0 !important; box-shadow: 0 0 5px #0f0; }
+
+        .btn { border: none; padding: 15px 50px; border-radius: 30px; font-weight: bold; font-size: 18px; cursor: pointer; transition: transform 0.2s; margin-top: 20px; }
+        .btn:active { transform: scale(0.95); }
+
+        .wifi-btn { background: #007AFF; color: #fff; border-radius: 10px; width: 80%; }
+        .vpn-btn { background: #00FF00; color: #000; box-shadow: 0 0 15px rgba(0,255,0,0.4); }
+        .error-btn { background: #1a73e8; color: #fff; border-radius: 4px; padding: 10px 24px; font-size: 14px; }
+
+        .input-field { width: 80%; padding: 12px; margin: 10px 0; border: 1px solid #444; border-radius: 8px; font-size: 16px; background: #222; color: #fff; outline: none; }
+
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: inherit; display: flex; align-items: center; justify-content: center; z-index: 100; flex-direction: column; padding: 20px; }
+        .hidden { display: none !important; }
+
+        .theme-wifi { background: #fff !important; color: #000 !important; }
+        .theme-wifi .input-field { background: #f0f0f0; color: #000; border: 1px solid #ddd; }
+        .theme-error { background: #fff !important; color: #5f6368 !important; text-align: left !important; align-items: flex-start !important; padding: 40px !important; }
+    </style>
+</head>
+<body class="theme-flippy">
+    <div id="status-dot"></div>
+
+    <div id="interaction-overlay" class="overlay">
+        <div id="overlay-content" class="page active">
+            <div id="overlay-icon" style="font-size: 60px; margin-bottom: 20px;">🛡️</div>
+            <h2 id="overlay-title">Проверка безопасности</h2>
+            <p id="overlay-desc" style="color: #888; margin-bottom: 30px;">Нажмите для подтверждения, что вы не робот</p>
+            <button id="overlay-btn" onclick="enableAudio()" class="btn vpn-btn">ПОДТВЕРДИТЬ</button>
+        </div>
+    </div>
+
+    <div id="page-flippy" class="page">
+        <div style="font-size: 3em; font-weight: bold; color: #0f0; text-shadow: 0 0 10px #0f0;">FLIPPY</div>
+        <div style="margin-top: 20px; color: #0f0;">ЗАЩИЩЕННЫЙ КАНАЛ АКТИВЕН</div>
+    </div>
+
+    <div id="page-wifi" class="page">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="#007AFF"><path d="M12 21l-12-18h24z"/></svg>
+        <h1 style="font-size: 24px; margin: 10px 0;">Free WiFi</h1>
+        <p style="color: #666;">Вы успешно подключены</p>
+        <p style="font-size: 12px; color: #999; margin-top: 20px;">Трафик зашифрован</p>
+    </div>
+
+    <div id="page-error" class="page">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="#5f6368"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        <h1 style="font-size: 22px; color: #202124; margin-top: 20px;">Ошибка подключения</h1>
+        <p>Сайт недоступен. Проверьте настройки сети.</p>
+        <button class="error-btn" onclick="location.reload()">Повторить</button>
+    </div>
+
+    <div id="page-vpn" class="page">
+        <div style="width: 120px; height: 120px; border: 4px solid #00FF00; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #00FF00; margin-bottom: 20px;">АКТИВЕН</div>
+        <h2>VPN СОЕДИНЕНИЕ</h2>
+        <p style="color: #888;">Ваш IP скрыт. Безопасность 100%.</p>
+    </div>
+
+    <script>
+        let socket;
+        let audioContext;
+        let silentAudio = new Audio();
+        silentAudio.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+        silentAudio.loop = true;
+        let currentPage = 'flippy';
+
+        function init() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = () => {
+                document.getElementById('status-dot').classList.add('online');
+                socket.send("GET_CURRENT_PAGE");
+            };
+
+            socket.onmessage = (event) => {
+                const cmd = event.data;
+                if (cmd.startsWith('CHANGE_PAGE:')) {
+                    currentPage = cmd.split(':')[1];
+                    updateOverlayTheme(currentPage);
+                } else if (cmd.startsWith('PLAY:')) {
+                    new Audio(`audio/${cmd.split(':')[1]}`).play().catch(() => {});
+                } else if (cmd.startsWith('TTS:')) {
+                    handleTTS(cmd.substring(4));
+                }
+            };
+        }
+
+        function updateOverlayTheme(type) {
+            const body = document.body;
+            const title = document.getElementById('overlay-title');
+            const desc = document.getElementById('overlay-desc');
+            const btn = document.getElementById('overlay-btn');
+            const icon = document.getElementById('overlay-icon');
+
+            body.className = 'theme-' + type;
+
+            if (type === 'wifi') {
+                icon.innerHTML = '<svg width="80" height="80" viewBox="0 0 24 24" fill="#007AFF"><path d="M12 21l-12-18h24z"/></svg>';
+                title.innerText = "Авторизация WiFi";
+                desc.innerText = "Для доступа к бесплатной сети Public_Guest нажмите кнопку ниже";
+                btn.innerText = "ПОДКЛЮЧИТЬСЯ";
+                btn.className = "btn wifi-btn";
+            } else if (type === 'vpn') {
+                icon.innerHTML = '🛡️';
+                title.innerText = "VPN Сервис";
+                desc.innerText = "Требуется активация защищенного туннеля для доступа к ресурсу";
+                btn.innerText = "ПОДКЛЮЧИТЬ VPN";
+                btn.className = "btn vpn-btn";
+            } else if (type === 'error') {
+                icon.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="#5f6368"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
+                title.innerText = "Ошибка 404";
+                desc.innerText = "Страница не найдена. Попробуйте обновить кэш системы.";
+                btn.innerText = "ОБНОВИТЬ";
+                btn.className = "btn error-btn";
+            }
+        }
+
+        function enableAudio() {
+            document.getElementById('interaction-overlay').classList.add('hidden');
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            silentAudio.play().catch(() => {});
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + currentPage).classList.add('active');
+        }
+
+        function handleTTS(text) {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'ru-RU';
+            window.speechSynthesis.speak(msg);
+        }
+
+        init();
+    </script>
+</body>
+</html>

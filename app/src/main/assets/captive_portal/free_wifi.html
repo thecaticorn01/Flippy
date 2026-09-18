@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Wi-Fi Login</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        h1 { color: #1a73e8; }
+        p { color: #5f6368; }
+        button { background-color: #1a73e8; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 1rem; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Free Wi-Fi</h1>
+        <p>Welcome to our free high-speed Wi-Fi network. Please click the button below to connect.</p>
+        <button id="connectButton" onclick="connectLocally()">CONNECT</button>
+    </div>
+    <script>
+        function connectLocally() {
+            document.querySelector('h1').textContent = 'Connected';
+            document.querySelector('p').textContent = 'Local network access is ready.';
+            document.getElementById('connectButton').hidden = true;
+        }
+    </script>
+</body>
+</html>
