@@ -1,6 +1,6 @@
 package com.tutozz.blespam
 
-enum class ContinuityType { DEVICE, ACTION, NOTYOURDEVICE }
+enum class ContinuityType { DEVICE, ACTION, NOTYOURDEVICE, KEYBOARD }
 
 data class ContinuityDevice(
     val value: String,

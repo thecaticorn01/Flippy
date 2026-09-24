@@ -88,6 +88,9 @@ class ContinuitySpam(private val type: ContinuityType, var crashMode: Boolean = 
                 ContinuityDevice("0055", "Not Your Device", ContinuityType.NOTYOURDEVICE),
                 ContinuityDevice("0030", "Not Your Device 2", ContinuityType.NOTYOURDEVICE)
             )
+            ContinuityType.KEYBOARD -> arrayOf(
+                ContinuityDevice("0030", "Apple Keyboard", ContinuityType.KEYBOARD)
+            )
         }
     }
 
