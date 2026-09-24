@@ -225,7 +225,7 @@ fun FlippyTheme(
     flipperFontScale: Float = 1.08f,
     uiScale: Float = 1f,
     animatedBackgroundEnabled: Boolean = false,
-    expressiveEnabled: Boolean = false,
+    expressiveEnabled: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
@@ -249,7 +249,7 @@ fun FlippyTheme(
     }
 
     androidx.compose.runtime.CompositionLocalProvider(
-        LocalExpressiveEnabled provides true,
+        LocalExpressiveEnabled provides expressiveEnabled,
         LocalAnimatedBackgroundEnabled provides animatedBackgroundEnabled,
         LocalDensity provides scaledDensity,
     ) {
@@ -257,6 +257,7 @@ fun FlippyTheme(
             colorScheme = expressiveScheme,
             typography = typography,
             motionScheme = MotionScheme.expressive(),
+            shapes = if (expressiveEnabled) ExpressiveShapes else Shapes(),
             content = content
         )
     }
@@ -2102,29 +2103,27 @@ private fun AdvertiseAddDialog(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                OutlinedTextField(
+                MaterialTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text(stringResource(R.string.ble_label_name)) },
                     placeholder = { Text(stringResource(R.string.ble_placeholder_name)) },
-                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
+                MaterialTextField(
                     value = companyCode,
                     onValueChange = { companyCode = it },
                     label = { Text(stringResource(R.string.ble_label_company_code)) },
                     placeholder = { Text(stringResource(R.string.ble_placeholder_company_code)) },
-                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
+                MaterialTextField(
                     value = payload,
                     onValueChange = { payload = it },
                     label = { Text(stringResource(R.string.ble_label_hex_payload)) },
                     placeholder = { Text(stringResource(R.string.ble_placeholder_hex_payload)) },
                     minLines = 3,
-                    shape = RoundedCornerShape(16.dp),
+                    maxLines = 5,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Row(
@@ -2141,12 +2140,11 @@ private fun AdvertiseAddDialog(
                     )
                     Text(stringResource(R.string.ble_randomize_mac))
                 }
-                OutlinedTextField(
+                MaterialTextField(
                     value = interval,
                     onValueChange = { interval = it.filter(Char::isDigit) },
                     label = { Text(stringResource(R.string.ble_label_spam_interval)) },
                     placeholder = { Text(stringResource(R.string.ble_placeholder_interval)) },
-                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -2494,6 +2492,7 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
     val activePluginBleModes by PluginBleModeRegistry.active.collectAsState()
 
     val bleDelay by viewModel.bleDelay.collectAsState()
+    val txState by BleSpamTx.state.collectAsState()
     val accent = MaterialTheme.colorScheme.primary
     val activeColor = lerp(accent, Color.White, 0.22f)
     val context = LocalContext.current
@@ -2528,7 +2527,9 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.weight(1f)
                 )
+                BleTxStatusChip(txState)
                 if (anythingBleActive) {
+                    Spacer(modifier = Modifier.width(8.dp))
                     TextButton(onClick = { viewModel.stopAllBleSpam() }) {
                         Text(stringResource(R.string.ble_spam_stop_all))
                     }
@@ -2629,10 +2630,9 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
             val actionMode = ContinuityMode(ContinuityType.ACTION, false)
             val crashMode = ContinuityMode(ContinuityType.ACTION, true)
             val activeLabels = sectionStatus(
-                "Device" to (spammingStates[Pair(SpamType.CONTINUITY, deviceMode)] == true ||
-                    spammingStates[Pair(SpamType.CONTINUITY, notYourMode)] == true),
-                "Action Modal" to (spammingStates[Pair(SpamType.CONTINUITY, actionMode)] == true),
-                "iOS Crash" to (spammingStates[Pair(SpamType.CONTINUITY, crashMode)] == true),
+                stringResource(R.string.ble_btn_device) to (spammingStates[Pair(SpamType.CONTINUITY, deviceMode)] == true),
+                stringResource(R.string.ble_btn_action_modal) to (spammingStates[Pair(SpamType.CONTINUITY, actionMode)] == true),
+                stringResource(R.string.ble_btn_ios_crash) to (spammingStates[Pair(SpamType.CONTINUITY, crashMode)] == true),
             )
             Text(
                 text = activeLabels?.let { stringResource(R.string.spam_status_current, it) }
@@ -2644,26 +2644,19 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
         }
         item {
             val deviceMode = ContinuityMode(ContinuityType.DEVICE, false)
-            val notYourMode = ContinuityMode(ContinuityType.NOTYOURDEVICE, false)
             val isDeviceActive = spammingStates[Pair(SpamType.CONTINUITY, deviceMode)] == true
-            val isNotYourActive = spammingStates[Pair(SpamType.CONTINUITY, notYourMode)] == true
-            val isCombinedActive = isDeviceActive || isNotYourActive
             AnimatedBleButton(
-                text = "Device",
-                isActive = isCombinedActive,
+                text = stringResource(R.string.ble_btn_device),
+                isActive = isDeviceActive,
                 onClick = {
-                    if (isCombinedActive) {
-                        gate.acquire {
-                            if (isDeviceActive) viewModel.toggleBleSpam(SpamType.CONTINUITY, deviceMode)
-                            if (isNotYourActive) viewModel.toggleBleSpam(SpamType.CONTINUITY, notYourMode)
-                        }
-                    } else {
-                        gate.acquire {
+                    gate.acquire {
+                        if (isDeviceActive) {
+                            viewModel.toggleBleSpam(SpamType.CONTINUITY, deviceMode)
+                        } else {
                             // One radio: per-item Apple singles stomp the
                             // whole-mode legacy instance, so stop them first.
                             viewModel.bleItems.stopSection(BleSection.IOS.route)
                             viewModel.toggleBleSpam(SpamType.CONTINUITY, deviceMode)
-                            viewModel.toggleBleSpam(SpamType.CONTINUITY, notYourMode)
                         }
                     }
                 },
@@ -2675,7 +2668,7 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
         item {
             val mode = ContinuityMode(ContinuityType.ACTION, false)
             AnimatedBleButton(
-                text = "Action Modal",
+                text = stringResource(R.string.ble_btn_action_modal),
                 isActive = spammingStates[Pair(SpamType.CONTINUITY, mode)] == true,
                 onClick = {
                     gate.acquire {
@@ -2691,7 +2684,7 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
         item {
             val mode = ContinuityMode(ContinuityType.ACTION, true)
             AnimatedBleButton(
-                text = "iOS Crash",
+                text = stringResource(R.string.ble_btn_ios_crash),
                 isActive = spammingStates[Pair(SpamType.CONTINUITY, mode)] == true,
                 onClick = {
                     gate.acquire {
@@ -2716,8 +2709,8 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
         item { BleSectionHeader(section = BleSection.SAMSUNG) { onSectionClick(BleSection.SAMSUNG) } }
         item {
             val activeLabels = sectionStatus(
-                "Watch" to (spammingStates[Pair(SpamType.EASY_SETUP, EasySetupDevice.Type.WATCH)] == true),
-                "Buds" to (spammingStates[Pair(SpamType.EASY_SETUP, EasySetupDevice.Type.BUDS)] == true),
+                stringResource(R.string.ble_btn_watch) to (spammingStates[Pair(SpamType.EASY_SETUP, EasySetupDevice.Type.WATCH)] == true),
+                stringResource(R.string.ble_btn_buds) to (spammingStates[Pair(SpamType.EASY_SETUP, EasySetupDevice.Type.BUDS)] == true),
             )
             Text(
                 text = activeLabels?.let { stringResource(R.string.spam_status_current, it) }
@@ -2729,7 +2722,7 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
         }
         item {
             AnimatedBleButton(
-                text = "Watch",
+                text = stringResource(R.string.ble_btn_watch),
                 isActive = spammingStates[Pair(SpamType.EASY_SETUP, EasySetupDevice.Type.WATCH)] == true,
                 onClick = { gate.acquire { viewModel.toggleBleSpam(SpamType.EASY_SETUP, EasySetupDevice.Type.WATCH) } },
                 blinkIntervalMs = bleDelay.toLong(),
@@ -2739,7 +2732,7 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
         }
         item {
             AnimatedBleButton(
-                text = "Buds",
+                text = stringResource(R.string.ble_btn_buds),
                 isActive = spammingStates[Pair(SpamType.EASY_SETUP, EasySetupDevice.Type.BUDS)] == true,
                 onClick = { gate.acquire { viewModel.toggleBleSpam(SpamType.EASY_SETUP, EasySetupDevice.Type.BUDS) } },
                 blinkIntervalMs = bleDelay.toLong(),
@@ -2751,7 +2744,7 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
         item { BleSectionHeader(section = BleSection.ANDROID) { onSectionClick(BleSection.ANDROID) } }
         item {
             val activeLabels = sectionStatus(
-                "Fast Pair" to (spammingStates[Pair(SpamType.FAST_PAIR, null)] == true),
+                stringResource(R.string.ble_btn_fast_pair) to (spammingStates[Pair(SpamType.FAST_PAIR, null)] == true),
             )
             Text(
                 text = activeLabels?.let { stringResource(R.string.spam_status_current, it) }
@@ -2764,7 +2757,7 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
 
         item {
             AnimatedBleButton(
-                text = "Fast Pair",
+                text = stringResource(R.string.ble_btn_fast_pair),
                 isActive = spammingStates[Pair(SpamType.FAST_PAIR, null)] == true,
                 onClick = { gate.acquire { viewModel.toggleBleSpam(SpamType.FAST_PAIR, null) } },
                 blinkIntervalMs = bleDelay.toLong(),
@@ -2776,7 +2769,7 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
         item { BleSectionHeader(section = BleSection.XIAOMI) { onSectionClick(BleSection.XIAOMI) } }
         item {
             val activeLabels = sectionStatus(
-                "Xiaomi Quick Connect" to (spammingStates[Pair(SpamType.XIAOMI, null)] == true),
+                stringResource(R.string.ble_btn_xiaomi) to (spammingStates[Pair(SpamType.XIAOMI, null)] == true),
             )
             Text(
                 text = activeLabels?.let { stringResource(R.string.spam_status_current, it) }
@@ -2788,7 +2781,7 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
         }
         item {
             AnimatedBleButton(
-                text = "Xiaomi Quick Connect",
+                text = stringResource(R.string.ble_btn_xiaomi),
                 isActive = spammingStates[Pair(SpamType.XIAOMI, null)] == true,
                 onClick = { gate.acquire { viewModel.toggleBleSpam(SpamType.XIAOMI, null) } },
                 blinkIntervalMs = bleDelay.toLong(),
@@ -2800,7 +2793,7 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
         item { BleSectionHeader(section = BleSection.WINDOWS) { onSectionClick(BleSection.WINDOWS) } }
         item {
             val activeLabels = sectionStatus(
-                "Swift Pair" to (spammingStates[Pair(SpamType.SWIFT_PAIR, null)] == true),
+                stringResource(R.string.ble_btn_swift_pair) to (spammingStates[Pair(SpamType.SWIFT_PAIR, null)] == true),
             )
             Text(
                 text = activeLabels?.let { stringResource(R.string.spam_status_current, it) }
@@ -2850,7 +2843,7 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
 
         item {
             Text(
-                text = "All in one",
+                text = stringResource(R.string.ble_btn_all_in_one),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.fillMaxWidth()
@@ -2858,7 +2851,7 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
         }
         item {
             AnimatedBleButton(
-                text = "Kitchen sink",
+                text = stringResource(R.string.ble_btn_kitchen_sink),
                 isActive = kitchenSinkActive,
                 onClick = { gate.acquire { viewModel.toggleKitchenSink() } },
                 blinkIntervalMs = bleDelay.toLong(),
@@ -2866,6 +2859,35 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
                 fullyRounded = true
             )
         }
+    }
+}
+
+/** Tiny live status chip for the shared BLE transmitter: dot + localized
+ *  label pulled straight from [BleSpamTx.state], so the home screen shows
+ *  what the radio actually reported (on air / idle / error). */
+@Composable
+fun BleTxStatusChip(txState: BleSpamTx.TxState) {
+    val (dot, label) = when {
+        txState.onAir || txState.signature != null ->
+            MaterialTheme.colorScheme.primary to stringResource(R.string.ble_tx_transmitting)
+        txState.lastError != null ->
+            MaterialTheme.colorScheme.error to stringResource(R.string.ble_tx_error, txState.lastError)
+        else ->
+            MaterialTheme.colorScheme.onSurfaceVariant to stringResource(R.string.ble_tx_idle)
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(dot)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -3664,13 +3686,16 @@ private fun buildBleSectionModeGroups(context: Context, section: BleSection): Li
             val airTagItems = allDevices.filter { it.name in airTags }
             val notYourItems = ContinuitySpam(ContinuityType.NOTYOURDEVICE).devices
             val actionItems = ContinuitySpam(ContinuityType.ACTION).devices
+            val keyboardItems = ContinuitySpam(ContinuityType.KEYBOARD).devices.map { device ->
+                BleDeviceItem(device.name) { ContinuitySingleSpam(device, false) }
+            }
             listOf(
                 BleModeGroup(
                     title = context.getString(R.string.ble_list_apple),
                     modes = listOf(Pair(SpamType.CONTINUITY, ContinuityMode(ContinuityType.DEVICE, false))),
                     items = deviceItems.map { device ->
                         BleDeviceItem(device.name) { ContinuitySingleSpam(device, false) }
-                    }
+                    } + keyboardItems
                 ),
                 BleModeGroup(
                     title = context.getString(R.string.ble_list_airtag),
@@ -3803,10 +3828,11 @@ fun BleSectionScreen(section: BleSection, viewModel: SpamViewModel, onBack: () -
             return
         }
         gate.acquire {
-            // One radio: a whole-mode Apple spammer + a single item stomp
-            // each other's legacy instance (same MAC, flapping data), so
-            // give the single a clean radio.
-            if (key.section == BleSection.IOS.route) BleSpamRuntime.stopAppleModes()
+            // One hardware radio: giving this single the air means releasing
+            // every other BLE source first (whole modes, kitchen sink, other
+            // items) so the popup is a stable single frame, not flapping data.
+            BleSpamRuntime.quietStopAll()
+            controller.stopAll()
             if (controller.start(key, factory) != BlePreflight.OK) {
                 FlippyToast.show(startFailedMessage)
             }
@@ -3820,7 +3846,9 @@ fun BleSectionScreen(section: BleSection, viewModel: SpamViewModel, onBack: () -
             return
         }
         gate.acquire {
-            if (sectionRoute == BleSection.IOS.route) BleSpamRuntime.stopAppleModes()
+            // Same single-radio rule as toggleItem: one stable owner at a time.
+            BleSpamRuntime.quietStopAll()
+            controller.stopAll()
             var failures = 0
             keys.zip(items).forEach { (key, item) ->
                 if (controller.start(key, item.spammerFactory) != BlePreflight.OK) failures++
@@ -5532,7 +5560,7 @@ class SpamViewModel(private val application: Application) : AndroidViewModel(app
     val glassNavEnabled: StateFlow<Boolean> = _liquidGlassEnabled
     private val _animatedBackgroundEnabled = MutableStateFlow(prefs.getBoolean("animated_background_enabled", false))
     val animatedBackgroundEnabled: StateFlow<Boolean> = _animatedBackgroundEnabled
-    private val _expressiveEnabled = MutableStateFlow(prefs.getBoolean("md3_expressive", false))
+    private val _expressiveEnabled = MutableStateFlow(prefs.getBoolean("md3_expressive", true))
     val expressiveEnabled: StateFlow<Boolean> = _expressiveEnabled
     private val _appLanguage = MutableStateFlow(prefs.getString("app_language", "en") ?: "en")
     val appLanguage: StateFlow<String> = _appLanguage
