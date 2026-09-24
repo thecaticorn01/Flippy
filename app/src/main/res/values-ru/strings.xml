@@ -65,6 +65,19 @@
     <string name="ble_spam_no_advertiser">Это устройство не поддерживает BLE-рекламу</string>
     <string name="ble_spam_start_failed">Не удалось запустить</string>
     <string name="ble_spam_stop_all">Остановить всё</string>
+    <string name="ble_tx_transmitting">Передача</string>
+    <string name="ble_tx_idle">Радио свободно</string>
+    <string name="ble_tx_error">Ошибка радио: %1$s</string>
+    <string name="ble_btn_device">Device</string>
+    <string name="ble_btn_action_modal">Action Modal</string>
+    <string name="ble_btn_ios_crash">iOS Crash</string>
+    <string name="ble_btn_watch">Watch</string>
+    <string name="ble_btn_buds">Buds</string>
+    <string name="ble_btn_fast_pair">Fast Pair</string>
+    <string name="ble_btn_xiaomi">Xiaomi Quick Connect</string>
+    <string name="ble_btn_swift_pair">Swift Pair</string>
+    <string name="ble_btn_all_in_one">Всё сразу</string>
+    <string name="ble_btn_kitchen_sink">Kitchen sink</string>
     <string name="ble_placeholder_company_code">Например: 0x004C для Apple</string>
     <string name="ble_placeholder_hex_payload">Вставьте hex-строку без пробелов, например: 071907022075aa3001000045121212000000000000000000000000</string>
     <string name="ble_placeholder_interval">200-1000</string>
@@ -747,11 +760,12 @@
     <string name="zero_wifi_deauth">WiFi Deauth</string>
     <string name="nfc_master_key">Мастер ключ</string>
     <string name="nfc_master_key_title">Мастер ключ</string>
-    <string name="nfc_master_key_root_only_desc">Нажмите «Старт» и приложите Mifare Classic к телефону: встроенный словарь проверяется по секторам без root. Root/Shizuku только включают NFC.</string>
-    <string name="nfc_master_key_status_root">Root · готово к бруту</string>
+    <string name="nfc_master_key_root_only_desc">Нажмите «Старт» и приложите любую карту к телефону. Движок проверяет словарь и ключи по умолчанию для каждой технологии — MIFARE Classic (Crypto1), UltraLight/NTAG пароли, DESFire/Type 4, ISO 15693 и ISO 14443-B — всё без root. Root/Shizuku только включают NFC и могут показать узел NCI.</string>
+    <string name="nfc_master_key_status_root">Root · NFC включён · готово к бруту</string>
+    <string name="nfc_master_key_status_root_raw">Root · узел NCI · готово к бруту</string>
     <string name="nfc_master_key_status_shizuku">Shizuku · NFC можно включить, ключи без root</string>
-    <string name="nfc_master_key_status_no_root">Без root · приложите метку для проверки словаря</string>
-    <string name="nfc_master_key_rootless_hint">Работает без root: авторизация Mifare Classic — обычный SDK-вызов. Shizuku/Dhizuku (shell) дополнительно могут выполнить `svc nfc enable`.</string>
+    <string name="nfc_master_key_status_no_root">Без root · приложите метку для проверки</string>
+    <string name="nfc_master_key_rootless_hint">Работает без root: все пробы используют SDK transceive/auth (секторы Classic, NTAG PWD_AUTH, DESFire по умолчанию, блоки ISO 15693…). Shizuku/Dhizuku (shell) дополнительно могут выполнить `svc nfc enable`.</string>
     <string name="nfc_master_key_start">Начать брут</string>
     <string name="nfc_master_key_stop">Стоп</string>
     <string name="bad_usb_title">BAD USB</string>
@@ -808,9 +822,12 @@
     <string name="nrf_scanner_bypass_3">Обход 3...</string>
     <string name="nrf_scanner_error">Ошибка подключения</string>
     <string name="nrf_scanner_success">Успешно подключено</string>
-    <string name="nfc_master_key_description">Без root: словарь Mifare Classic</string>
-    <string name="nfc_master_key_desc">Проверка словаря Mifare Classic без root (приложите метку). Root/Shizuku только включают NFC.</string>
-    <string name="nfc_master_key_scanning">Работает… приложите Mifare Classic</string>
+    <string name="nfc_master_key_description">Без root: проверка ключей для многих технологий</string>
+    <string name="nfc_master_key_desc">Проверка без root для MIFARE Classic, UltraLight/NTAG, DESFire/Type 4, ISO 15693 и ISO 14443-B (приложите метку). Root/Shizuku только включают NFC.</string>
+    <string name="nfc_master_key_scanning">Работает… приложите любую метку</string>
+    <string name="nfc_master_key_scanning_tech">Работает… последняя цель %1$s</string>
+    <string name="nfc_master_key_hits">Найдено учётных данных: %1$d</string>
+    <string name="nfc_master_key_saved">%1$d учётных данных сохранено в локальном хранилище</string>
 
     
     <string name="qr_tools">QR инструменты</string>
