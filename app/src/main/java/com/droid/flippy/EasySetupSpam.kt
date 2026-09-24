@@ -7,6 +7,8 @@ import java.util.concurrent.Executors
 
 class EasySetupSpam(private val type: EasySetupDevice.Type) : Spammer {
 
+    
+    @Volatile
     private var isSpamming = false
     private var blinkRunnable: Runnable? = null
 

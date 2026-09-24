@@ -8,6 +8,8 @@ class SwiftPairSingleSpam(
     private val isHeadphone: Boolean
 ) : Spammer {
 
+    
+    @Volatile
     private var isSpamming = false
     private var blinkRunnable: Runnable? = null
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()

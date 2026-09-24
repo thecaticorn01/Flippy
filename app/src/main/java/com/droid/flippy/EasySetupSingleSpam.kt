@@ -5,6 +5,8 @@ import java.util.concurrent.Executors
 
 class EasySetupSingleSpam(private val device: EasySetupDevice) : Spammer {
 
+    
+    @Volatile
     private var isSpamming = false
     private var blinkRunnable: Runnable? = null
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()

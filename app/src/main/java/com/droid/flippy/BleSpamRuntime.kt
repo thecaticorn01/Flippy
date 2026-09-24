@@ -84,6 +84,10 @@ object BleSpamRuntime {
             spammers.remove(key)
             _spammingStates.value = _spammingStates.value.toMutableMap().apply { this[key] = false }
         } else {
+            // ONE hardware radio: a new mode is only readable when it owns the
+            // slot, so quietly release every other BLE source first (no plugin
+            // stop-all hook = arbitration, not "user stopped all").
+            quietStopAll()
             val spammer = createSpammer(type, subtype) ?: return
             spammers[key] = spammer
             spammer.start()
@@ -99,6 +103,7 @@ object BleSpamRuntime {
         if (kitchenSinkJob != null) {
             stopKitchenSink()
         } else {
+            quietStopAll()
             startKitchenSink()
         }
         updateNotification()
@@ -130,13 +135,24 @@ object BleSpamRuntime {
     fun stopAllBleSpam() {
         val decision = PluginBluetoothHooks.action("bluetooth.ble.stop_all", JSONObject().put("activeCount", spammers.size).put("kitchenSinkActive", kitchenSinkJob != null))
         if (decision.cancelled || decision.handled) return
-        spammers.values.forEach { it.stop() }
+        quietStopAll()
+        updateNotification()
+        updateWidgets()
+    }
+
+    /**
+     * Hard arbitration stop: releases every BLE source without running the
+     * user-facing plugin "stop_all" hook (plugins must not veto a new mode
+     * taking the single hardware radio). Idempotent and safe to call from
+     * any thread.
+     */
+    fun quietStopAll() {
+        spammers.values.forEach { runCatching { it.stop() } }
         spammers.clear()
         _spammingStates.value = emptyMap()
         stopKitchenSink()
         PluginBleModeRegistry.stopAll()
-        updateNotification()
-        updateWidgets()
+        BleSpamTx.stop()
     }
 
     fun toggleSection(section: BleSection) {
@@ -147,6 +163,7 @@ object BleSpamRuntime {
         if (anyActive) {
             keys.forEach { stopKey(it) }
         } else {
+            quietStopAll()
             keys.forEach { startKey(it) }
         }
         updateNotification()

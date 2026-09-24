@@ -7,6 +7,8 @@ import java.util.concurrent.Executors
 
 class SwiftPairSpam : Spammer {
 
+    
+    @Volatile
     private var _isSpamming = false
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()
     private var blinkRunnable: Runnable? = null

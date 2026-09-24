@@ -5,6 +5,8 @@ import java.util.concurrent.Executors
 
 class FastPairSingleSpam(private val device: FastPairDevice) : Spammer {
 
+    
+    @Volatile
     private var isSpamming = false
     private var blinkRunnable: Runnable? = null
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()
