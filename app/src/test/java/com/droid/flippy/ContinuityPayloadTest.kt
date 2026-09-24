@@ -92,4 +92,20 @@ class ContinuityPayloadTest {
         assertEquals(0x0F, u(crash[0]))
         assertEquals(0x05, u(crash[1]))
     }
+
+    @Test
+    fun keyboardPayload_matchesKeyboardC() {
+        // Ported byte-for-byte from keyboard.c `choiceSelection`. The frame is
+        // fixed (no randomization), so the bytes must match exactly.
+        val payload = ContinuityPayloads.keyboardPayload()
+        assertEquals(19, payload.size)
+        assertArrayEquals(
+            byteArrayOf(
+                0x04, 0x04, 0x20, 0x00, 0x00, 0x00, 0x0F, 0x05,
+                0xC0.toByte(), 0x13, 0x00, 0x4C, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00
+            ),
+            payload
+        )
+    }
 }

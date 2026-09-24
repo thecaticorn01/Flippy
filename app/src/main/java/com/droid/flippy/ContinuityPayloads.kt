@@ -147,4 +147,14 @@ internal object ContinuityPayloads {
         }
         return Helper.convertHexToByteArray(payloadHex)
     }
+
+    /**
+     * Apple Keyboard frame, ported byte-for-byte from keyboard.c (the
+     * `choiceSelection` manufacturer payload). Fixed frame: iOS latches the
+     * "Apple Keyboard" pairing popup when this exact payload is on air, so
+     * no randomization — every byte must match.
+     */
+    fun keyboardPayload(): ByteArray = Helper.convertHexToByteArray(
+        "0404200000000F05C013004C00000000000000"
+    )
 }

