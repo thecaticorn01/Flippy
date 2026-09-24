@@ -6,12 +6,14 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [NfcScanEntity::class],
-    version = 1,
+    entities = [NfcScanEntity::class, NfcMasterCredential::class],
+    version = 2,
     exportSchema = true,
 )
 abstract class NfcDatabase : RoomDatabase() {
     abstract fun scans(): NfcScanDao
+
+    abstract fun nfcMaster(): NfcMasterDao
 
     companion object {
         @Volatile

@@ -16,9 +16,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -83,12 +85,22 @@ fun NfcMasterKeyScreen(navController: NavController, viewModel: NfcViewModel) {
     val isRunning by viewModel.masterKeyRunning.collectAsState()
     val currentKey by viewModel.currentKey.collectAsState()
     val logs by viewModel.masterKeyLogs.collectAsState()
+    val lastTech by viewModel.lastPrimaryTech.collectAsState()
+    val hits by viewModel.masterHits.collectAsState()
+    val credentials by viewModel.masterCredentials.collectAsState()
     val accent = MaterialTheme.colorScheme.primary
     val hasRoot = remember { RootNfcHelper.hasRoot() }
-    // Shizuku state is a flow — collect so the pill updates after grant.
     val shizukuState by com.droid.flippy.shizuku.ShizukuManager.state.collectAsState()
     val hasShizuku = shizukuState == com.droid.flippy.shizuku.ShizukuManager.State.READY
     val elevated = hasRoot || hasShizuku
+    var rawNode by remember(hasRoot) { mutableStateOf<String?>(null) }
+    LaunchedEffect(hasRoot) {
+        rawNode = if (hasRoot) {
+            withContext(Dispatchers.IO) { com.droid.flippy.nfc.master.NfcRootRaw.currentNode() }
+        } else {
+            null
+        }
+    }
 
     val infinite = rememberInfiniteTransition(label = "nfc_master_key")
     val scale by infinite.animateFloat(
@@ -124,9 +136,6 @@ fun NfcMasterKeyScreen(navController: NavController, viewModel: NfcViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = 14.dp,
                 ) {
-                    // NOTE: MaterialCard lays content out in a Box, so multiple
-                    // children must be wrapped in a Column here (otherwise the
-                    // status pill draws on top of the description text).
                     Column {
                         Text(
                             text = stringResource(R.string.nfc_master_key_root_only_desc),
@@ -144,6 +153,7 @@ fun NfcMasterKeyScreen(navController: NavController, viewModel: NfcViewModel) {
                         ) {
                             Text(
                                 text = when {
+                                    hasRoot && rawNode != null -> stringResource(R.string.nfc_master_key_status_root_raw)
                                     hasRoot -> stringResource(R.string.nfc_master_key_status_root)
                                     hasShizuku -> stringResource(R.string.nfc_master_key_status_shizuku)
                                     else -> stringResource(R.string.nfc_master_key_status_no_root)
@@ -162,10 +172,57 @@ fun NfcMasterKeyScreen(navController: NavController, viewModel: NfcViewModel) {
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
+                        Spacer(Modifier.height(12.dp))
+                        val supported = com.droid.flippy.nfc.master.NfcTechnology.entries
+                            .filter { it != com.droid.flippy.nfc.master.NfcTechnology.UNKNOWN }
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        ) {
+                            supported.forEach { tech ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = accent.copy(alpha = if (lastTech == tech) 0.28f else 0.12f),
+                                ) {
+                                    Text(
+                                        text = tech.displayName,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = accent,
+                                        maxLines = 1,
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
-                Spacer(Modifier.height(20.dp))
+                if (isRunning && hits.isNotEmpty()) {
+                    Spacer(Modifier.height(12.dp))
+                    MaterialCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = 12.dp,
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(
+                                text = stringResource(R.string.nfc_master_key_hits, hits.size),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = accent,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            hits.take(6).forEach { hit ->
+                                Text(
+                                    text = "· ${hit.label}  ${hit.valueHex}${if (hit.notes.isNotBlank()) "  (${hit.notes})" else ""}",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2,
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
                 Icon(
                     imageVector = Icons.Default.Key,
                     contentDescription = null,
@@ -186,7 +243,11 @@ fun NfcMasterKeyScreen(navController: NavController, viewModel: NfcViewModel) {
                 if (isRunning) {
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        text = stringResource(R.string.nfc_master_key_scanning),
+                        text = if (lastTech != null) {
+                            stringResource(R.string.nfc_master_key_scanning_tech, lastTech!!.displayName)
+                        } else {
+                            stringResource(R.string.nfc_master_key_scanning)
+                        },
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -213,6 +274,16 @@ fun NfcMasterKeyScreen(navController: NavController, viewModel: NfcViewModel) {
                             item {
                                 Text(
                                     text = "…",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                        if (isRunning && credentials.isNotEmpty()) {
+                            item {
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = stringResource(R.string.nfc_master_key_saved, credentials.size),
+                                    style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }

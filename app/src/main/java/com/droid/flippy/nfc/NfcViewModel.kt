@@ -10,7 +10,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.droid.flippy.RootUtils
 import com.droid.flippy.trackNfcRead
 import com.droid.flippy.nfc.db.NfcDatabase
 import com.droid.flippy.nfc.db.NfcScanEntity
@@ -63,118 +62,93 @@ class NfcViewModel(private val app: Application) : AndroidViewModel(app) {
     private val _currentKey = MutableStateFlow("")
     val currentKey = _currentKey.asStateFlow()
 
+    private val _lastPrimaryTech = MutableStateFlow<com.droid.flippy.nfc.master.NfcTechnology?>(null)
+    val lastPrimaryTech = _lastPrimaryTech.asStateFlow()
+
+    private val _masterHits = MutableStateFlow<List<com.droid.flippy.nfc.master.CredentialHit>>(emptyList())
+    val masterHits = _masterHits.asStateFlow()
+
+    val masterCredentials: StateFlow<List<com.droid.flippy.nfc.db.NfcMasterCredential>> =
+        com.droid.flippy.nfc.db.NfcDatabase.get(app).nfcMaster().observeRecent(20)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     private var masterKeyJob: kotlinx.coroutines.Job? = null
 
-    
     fun startMasterKey() {
         if (_masterKeyRunning.value) return
         _masterKeyRunning.value = true
         _masterKeyLogs.value = emptyList()
+        _masterHits.value = emptyList()
+        _currentKey.value = ""
         masterKeyJob = viewModelScope.launch {
-            val rooted = RootNfcHelper.hasRoot()
-            // Rootless path: Shizuku (shell UID, no root) can still run
-            // `svc nfc enable` to force NFC on. Best-effort, never blocks.
-            var shizukuNfc = false
-            if (!rooted) {
-                shizukuNfc = runCatching {
-                    withContext(Dispatchers.IO) {
-                        com.droid.flippy.shizuku.ShizukuManager.refresh()
-                        if (com.droid.flippy.shizuku.ShizukuManager.isReady()) {
-                            com.droid.flippy.shizuku.ShizukuToggles.setNfc(app, true)
-                        } else false
-                    }
-                }.getOrDefault(false)
-            } else {
-                withContext(Dispatchers.IO) {
-                    RootNfcHelper.prepareForRead(app)
-                    RootUtils.executeRootCommand("cmd nfc enable")
-                    RootUtils.executeRootCommand("svc nfc enable")
-                }
+            val rootCtx = com.droid.flippy.nfc.master.NfcRootRaw.prepare(app)
+            when (rootCtx.via) {
+                com.droid.flippy.nfc.master.NfcRootRaw.Elevation.ROOT -> addMasterKeyLog("Root OK — NFC ${if (rootCtx.nfcEnabled) "on" else "not confirmed"}${if (rootCtx.rawAccess) " · raw NCI node ${rootCtx.rawNciNode}" else ""}")
+                com.droid.flippy.nfc.master.NfcRootRaw.Elevation.SHIZUKU -> addMasterKeyLog("Shizuku OK — NFC ${if (rootCtx.nfcEnabled) "on" else "not confirmed"}, crypto needs no root")
+                com.droid.flippy.nfc.master.NfcRootRaw.Elevation.NONE -> addMasterKeyLog("Rootless mode — NFC left to the system; brute-forcing needs no root")
             }
-            when {
-                rooted -> addMasterKeyLog("Root OK — NFC forced on, brute intercom/NFC locks")
-                shizukuNfc -> addMasterKeyLog("Shizuku OK — NFC forced on without root; tap a Mifare Classic tag")
-                com.droid.flippy.shizuku.ShizukuManager.isReady() ->
-                    addMasterKeyLog("Shizuku ready — tap a Mifare Classic tag for rootless dictionary check")
-                else -> addMasterKeyLog("Rootless mode — tap a Mifare Classic tag; dictionary check needs no root")
-            }
+            val supported = com.droid.flippy.nfc.master.NfcTechnology.entries
+                .filter { it != com.droid.flippy.nfc.master.NfcTechnology.UNKNOWN }
+                .joinToString(" · ") { it.displayName }
+            addMasterKeyLog("Master Key: $supported")
+            addMasterKeyLog("Listening — tap any card. Press Stop to end.")
 
-            val keys = MifareClassicKeys.DICTIONARY_HEX
-            val targets = listOf(
-                "Mifare Classic sector",
-                "Intercom lock (Classic)",
-                "NFC door reader",
-                "Ultralight auth",
-                "Type A crypto1",
-            )
-            var keyIndex = 0
-            var targetIndex = 0
-
+            var frame = 0
             while (_masterKeyRunning.value) {
-                val target = targets[targetIndex % targets.size]
-                addMasterKeyLog("Target: $target — hold tag to phone for real check")
-                repeat(8) {
-                    if (!_masterKeyRunning.value) return@repeat
-                    val key = keys[keyIndex % keys.size]
-                    keyIndex++
-                    _currentKey.value = key
-                    addMasterKeyLog("Brute key $key")
-                    delay(180)
-                }
-                targetIndex++
-                delay(250)
+                val glyphs = listOf("✻", "✹", "✺", "✻")
+                _currentKey.value = glyphs[frame % glyphs.size].repeat(6).take(6)
+                delay(400)
+                frame++
             }
         }
     }
 
     /**
-     * Rootless real check: tries the built-in dictionary against every
-     * sector of a tapped Mifare Classic tag via the public SDK
-     * (authenticateSectorWithKeyA/B). No root, no Shizuku needed.
-     * Call while [masterKeyRunning] is true; results go to [masterKeyLogs].
+     * Rootless real check: interrogates the tapped tag with the multi-tech
+     * engine ([NfcMasterSession]) — MIFARE Classic dictionary + sector dump,
+     * NTAG/Ultralight PWD_AUTH + 3DES, DESFire/Type-4 default keys, ISO 15693
+     * and ISO 14443-B mapping. Results fan out to [masterKeyLogs], [masterHits]
+     * and the persistent [masterCredentials] store. No root required.
+     * Call while [masterKeyRunning] is true.
      */
     fun onMasterKeyTag(tag: Tag) {
         if (!_masterKeyRunning.value) return
         viewModelScope.launch(Dispatchers.IO) {
-            val classic = android.nfc.tech.MifareClassic.get(tag)
-            if (classic == null) {
-                addMasterKeyLog("Tag is not Mifare Classic — UID only")
-                return@launch
-            }
-            val keys = MifareClassicKeys.DICTIONARY_HEX
-            val keyBytes = keys.map { runCatching { MifareClassicKeys.toKeyBytes(it) }.getOrNull() }
-            var found = 0
-            var sectors = 0
-            try {
-                classic.connect()
-                sectors = classic.sectorCount
-                addMasterKeyLog("Mifare Classic: $sectors sectors, trying ${keys.size} keys…")
-                for (sector in 0 until sectors) {
-                    if (!_masterKeyRunning.value) break
-                    var hit: String? = null
-                    var hitType = ""
-                    for (i in keys.indices) {
-                        val kb = keyBytes[i] ?: continue
-                        if (runCatching { classic.authenticateSectorWithKeyA(sector, kb) }.getOrDefault(false)) {
-                            hit = keys[i]; hitType = "A"; break
-                        }
-                        if (runCatching { classic.authenticateSectorWithKeyB(sector, kb) }.getOrDefault(false)) {
-                            hit = keys[i]; hitType = "B"; break
-                        }
-                    }
-                    if (hit != null) {
-                        found++
-                        _currentKey.value = hit
-                        addMasterKeyLog("Sector $sector: Key$hitType $hit ✓")
-                    } else {
-                        addMasterKeyLog("Sector $sector: no dictionary key")
+            addMasterKeyLog("Tap — UID ${tag.id?.let { com.droid.flippy.nfc.master.NfcProbeEnv.hexOf(it) } ?: "?"}")
+            val report = com.droid.flippy.nfc.master.NfcMasterSession.run(
+                tag = tag,
+                isRunning = { _masterKeyRunning.value },
+                log = { addMasterKeyLog(it) },
+            )
+            _lastPrimaryTech.value = report.primaryTechnology
+            _masterHits.value = report.hits
+            _currentKey.value = report.hits.firstOrNull()?.valueHex ?: ""
+
+            if (report.hits.isEmpty()) {
+                addMasterKeyLog("No dictionary/default credential matched")
+                vibrateNfcWarn(app)
+            } else {
+                report.hits.forEach { hit ->
+                    addMasterKeyLog("✓ ${hit.label} ${hit.valueHex}${if (hit.notes.isNotBlank()) " (${hit.notes})" else ""}")
+                    runCatching {
+                        com.droid.flippy.nfc.db.NfcDatabase.get(app).nfcMaster().insert(
+                            com.droid.flippy.nfc.db.NfcMasterCredential(
+                                capturedAtMillis = System.currentTimeMillis(),
+                                uidHex = report.uidHex,
+                                technology = hit.technology.name,
+                                label = hit.label,
+                                valueHex = hit.valueHex,
+                                notes = hit.notes,
+                                dumpHex = report.dumpHex.takeIf { it.isNotBlank() },
+                            ),
+                        )
                     }
                 }
-                addMasterKeyLog("Done: $found/$sectors sectors matched")
-            } catch (e: Exception) {
-                addMasterKeyLog("Classic read failed: ${e.message?.take(60)}")
-            } finally {
-                runCatching { classic.close() }
+                vibrateNfcSuccess(app)
+                addMasterKeyLog("Done — ${report.hits.size} credential(s) saved")
+            }
+            if (report.dumpHex.isNotBlank()) {
+                addMasterKeyLog("Dump: ${report.dumpHex.lines().size} lines captured")
             }
         }
     }
