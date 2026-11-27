@@ -1383,4 +1383,12 @@
     <string name="ble_status_off_title">Ожидание</string>
     <string name="ble_status_off_body">Передача не идёт. Нажмите цель ниже, чтобы начать вещание.</string>
     <string name="ble_ios_hardening_note">Apple закрыла эти всплывающие окна в iOS 17.2+. Актуальные iPhone (в т.ч. iPhone 15/16/17) обычно их не показывают, даже если приложение вещает корректно — проверьте на более старом/уязвимом устройстве.</string>
+
+    <!-- BLE spam TX power / proximity control -->
+    <string name="ble_txpower_label">Мощность сигнала</string>
+    <string name="ble_txpower_ultralow">Мин</string>
+    <string name="ble_txpower_low">Низк</string>
+    <string name="ble_txpower_medium">Сред</string>
+    <string name="ble_txpower_high">Выс</string>
+    <string name="ble_txpower_hint">Всплывающие окна Apple зависят от расстояния. Выберите низкую мощность и держите телефон вплотную к цели, чтобы сигнал выглядел как близкое устройство. «Выс» сохраняет дальность для других целей.</string>
 </resources>

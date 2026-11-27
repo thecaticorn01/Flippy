@@ -40,6 +40,9 @@ object BleSpamRuntime {
     private val _bleDelay = MutableStateFlow(20)
     val bleDelay: StateFlow<Int> = _bleDelay.asStateFlow()
 
+    private val _bleTxPower = MutableStateFlow(android.bluetooth.le.AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+    val bleTxPower: StateFlow<Int> = _bleTxPower.asStateFlow()
+
     private val _kitchenSinkActive = MutableStateFlow(false)
     val kitchenSinkActive: StateFlow<Boolean> = _kitchenSinkActive.asStateFlow()
     private var kitchenSinkJob: Job? = null
@@ -49,6 +52,8 @@ object BleSpamRuntime {
         if (appContext == null) {
             appContext = context.applicationContext
         }
+        Helper.loadTxPower(context)
+        _bleTxPower.value = Helper.txPower
         updateNotification()
     }
 
@@ -60,6 +65,17 @@ object BleSpamRuntime {
         _bleDelay.value = clamped
         Helper.delay = clamped
         PluginBleModeRegistry.delayChanged(clamped)
+    }
+
+    /** Advertising TX power level (AdvertiseSettings.ADVERTISE_TX_POWER_*). */
+    fun setBleTxPower(level: Int) {
+        val ctx = appContext
+        if (ctx != null) {
+            Helper.saveTxPower(ctx, level)
+        } else {
+            Helper.txPower = level
+        }
+        _bleTxPower.value = Helper.txPower
     }
 
     fun trackSentPackets(count: Int = 1) {

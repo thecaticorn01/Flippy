@@ -2501,6 +2501,7 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
     val activePluginBleModes by PluginBleModeRegistry.active.collectAsState()
 
     val bleDelay by viewModel.bleDelay.collectAsState()
+    val bleTxPower by viewModel.bleTxPower.collectAsState()
     val txState by BleSpamTx.state.collectAsState()
     val accent = MaterialTheme.colorScheme.primary
     val activeColor = lerp(accent, Color.White, 0.22f)
@@ -2675,6 +2676,52 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
             }
         }
 
+
+        item {
+            // TX power / proximity control. Lower power makes Apple proximity
+            // pairing read the phone as a genuinely-adjacent device (hold it
+            // against the target); High keeps range for the other vectors.
+            val options = listOf(
+                AdvertiseSettings.ADVERTISE_TX_POWER_ULTRA_LOW to stringResource(R.string.ble_txpower_ultralow),
+                AdvertiseSettings.ADVERTISE_TX_POWER_LOW to stringResource(R.string.ble_txpower_low),
+                AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM to stringResource(R.string.ble_txpower_medium),
+                AdvertiseSettings.ADVERTISE_TX_POWER_HIGH to stringResource(R.string.ble_txpower_high),
+            )
+            MaterialCard(
+                modifier = Modifier.fillMaxWidth(),
+                accentColor = accent,
+                cornerRadius = 12.dp,
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.ble_txpower_label),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        options.forEach { (level, label) ->
+                            FilterChip(
+                                selected = bleTxPower == level,
+                                onClick = { viewModel.setBleTxPower(level) },
+                                label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+                    Text(
+                        text = stringResource(R.string.ble_txpower_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
 
         item {
             BleSectionHeader(section = BleSection.IOS) { onSectionClick(BleSection.IOS) }
@@ -5819,6 +5866,7 @@ class SpamViewModel(private val application: Application) : AndroidViewModel(app
     val bleSpamming: StateFlow<Boolean> = _bleSpamming
 
     val bleDelay: StateFlow<Int> = BleSpamRuntime.bleDelay
+    val bleTxPower: StateFlow<Int> = BleSpamRuntime.bleTxPower
     val spammingStates: StateFlow<Map<Pair<SpamType, Any?>, Boolean>> = BleSpamRuntime.spammingStates
     val kitchenSinkActive: StateFlow<Boolean> = BleSpamRuntime.kitchenSinkActive
 
@@ -6009,6 +6057,10 @@ class SpamViewModel(private val application: Application) : AndroidViewModel(app
 
     fun setBleDelay(delay: Int) {
         BleSpamRuntime.setBleDelay(delay)
+    }
+
+    fun setBleTxPower(level: Int) {
+        BleSpamRuntime.setBleTxPower(level)
     }
 
     fun setBleTabIndex(index: Int) {

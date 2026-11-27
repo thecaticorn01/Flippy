@@ -1446,4 +1446,12 @@
     <string name="ble_status_off_title">Idle</string>
     <string name="ble_status_off_body">Nothing is transmitting. Tap a target below to start advertising.</string>
     <string name="ble_ios_hardening_note">Apple hardened these pop-ups in iOS 17.2+. Up-to-date iPhones (incl. iPhone 15/16/17) usually will not show them even though the app is advertising correctly — test against an older/vulnerable device to confirm transmission.</string>
+
+    <!-- BLE spam TX power / proximity control -->
+    <string name="ble_txpower_label">Signal power</string>
+    <string name="ble_txpower_ultralow">Min</string>
+    <string name="ble_txpower_low">Low</string>
+    <string name="ble_txpower_medium">Med</string>
+    <string name="ble_txpower_high">High</string>
+    <string name="ble_txpower_hint">Apple pop-ups are gated on distance. Use a low power and hold the phone right against the target so the signal reads as a nearby device. High keeps range for the other targets.</string>
 </resources>

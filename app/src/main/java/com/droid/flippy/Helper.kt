@@ -1,6 +1,7 @@
 package com.droid.flippy
 
 import android.Manifest
+import android.bluetooth.le.AdvertiseSettings
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -19,9 +20,20 @@ object Helper {
     var useExtendedAdvertising = true
     var hardwareExtendedBroken: Boolean = false
 
+    /**
+     * Advertising TX power for BLE spam. Apple proximity pairing is gated on
+     * the received signal strength vs. an implied distance, so a weaker signal
+     * (phone held against the target) reads as a genuinely-adjacent device,
+     * whereas TX_POWER_HIGH from a distance reads as "too far / implausible"
+     * and modern iOS ignores it. Defaults to HIGH to preserve range for the
+     * non-Apple vectors; the user can lower it from the BLE spam screen.
+     */
+    var txPower = AdvertiseSettings.ADVERTISE_TX_POWER_HIGH
+
     private const val PREF_NAME = "AppSettings"
     private const val KEY_DELAY = "spam_delay"
     private const val KEY_CONCURRENT = "concurrent_mode"
+    private const val KEY_TXPOWER = "spam_tx_power"
 
     fun saveDelay(context: Context) {
         context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -33,6 +45,21 @@ object Helper {
         delay = prefs.getInt(KEY_DELAY, 20)
         concurrentMode = prefs.getBoolean(KEY_CONCURRENT, false)
         useExtendedAdvertising = prefs.getBoolean("extended_advertising_enabled", true)
+    }
+
+    fun loadTxPower(context: Context) {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        txPower = prefs.getInt(KEY_TXPOWER, AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+            .coerceIn(AdvertiseSettings.ADVERTISE_TX_POWER_ULTRA_LOW, AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+    }
+
+    fun saveTxPower(context: Context, level: Int) {
+        txPower = level.coerceIn(
+            AdvertiseSettings.ADVERTISE_TX_POWER_ULTRA_LOW,
+            AdvertiseSettings.ADVERTISE_TX_POWER_HIGH,
+        )
+        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            .edit().putInt(KEY_TXPOWER, txPower).apply()
     }
 
     fun canUseExtendedAdvertising(): Boolean {
