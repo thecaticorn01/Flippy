@@ -3,9 +3,10 @@ name: Build & Release APK
 # Builds the release APK against the latest Android SDK the project targets
 # (compileSdk/targetSdk 36 = Android 16) and publishes it as a GitHub Release.
 #
-# How releases are produced:
-#   * Push a tag like `v2.7`  -> a normal release tagged with that tag.
-#   * Run manually (workflow_dispatch) -> a prerelease tagged `nightly-<run>`.
+# How releases are produced (both are normal, non-prerelease releases):
+#   * Push a tag like `v2.7`  -> a release tagged with that tag.
+#   * Run manually (workflow_dispatch) -> a release tagged with the given tag,
+#     or `build-<run>` when none is provided.
 #
 # Signing (optional): add these repository secrets to sign with your own key.
 # Without them the release APK is signed with the debug key so it still installs.
@@ -21,7 +22,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Optional tag name for the release (defaults to nightly-<run>)'
+        description: 'Optional tag name for the release (defaults to build-<run>)'
         required: false
         default: ''
 
@@ -82,13 +83,13 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-            echo "prerelease=false" >> "$GITHUB_OUTPUT"
           else
             tag="${{ github.event.inputs.tag }}"
-            [ -z "$tag" ] && tag="nightly-${{ github.run_number }}"
+            [ -z "$tag" ] && tag="build-${{ github.run_number }}"
             echo "tag=$tag" >> "$GITHUB_OUTPUT"
-            echo "prerelease=true" >> "$GITHUB_OUTPUT"
           fi
+          # Always a normal release, never a prerelease.
+          echo "prerelease=false" >> "$GITHUB_OUTPUT"
 
       - name: Build release APK
         run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
