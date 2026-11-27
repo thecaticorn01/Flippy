@@ -53,6 +53,7 @@ object UsbIrManager {
     private const val PREFS = "DolphyPrefs"
     private const val KEY_ROUTE = "ir_transmitter_route"
     private const val KEY_ALLOW_GENERIC = "ir_usb_allow_generic"
+    private const val KEY_POPUP_DISABLED = "ir_usb_popup_disabled"
 
     enum class Route { AUTO, USB_ONLY, BUILT_IN_ONLY }
 
@@ -80,6 +81,21 @@ object UsbIrManager {
 
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state.asStateFlow()
+
+    /**
+     * True when an external IR module has just been attached and the one-time
+     * "IR module connected" popup should be shown. Set on the attach transition
+     * (device becomes present), cleared by [dismissPopup]. Suppressed entirely
+     * once the user ticks "don't show again".
+     */
+    private val _showUsbPopup = MutableStateFlow(false)
+    val showUsbPopup: StateFlow<Boolean> = _showUsbPopup.asStateFlow()
+
+    @Volatile
+    private var popupSuppressed = false
+
+    @Volatile
+    private var hadIrDevice = false
 
     @Volatile
     private var appContext: Context? = null
@@ -201,6 +217,33 @@ object UsbIrManager {
                 connectedLabel = if (open) it.connectedLabel else null,
                 connectedProtocol = if (open) it.connectedProtocol else null
             )
+        }
+
+        // Fire the "IR module connected" popup on the attach transition (an IR
+        // device becomes present after not being present), not on every refresh.
+        val hasIrDevice = devices.any { it.isSupported || it.isCandidate }
+        if (hasIrDevice && !hadIrDevice && !popupSuppressed) {
+            _showUsbPopup.value = true
+        } else if (!hasIrDevice) {
+            _showUsbPopup.value = false
+        }
+        hadIrDevice = hasIrDevice
+    }
+
+    /** Human-readable label of the attached IR module, for the popup. */
+    fun connectedIrLabel(): String? {
+        val devices = _state.value.devices
+        return devices.firstOrNull { it.isSupported }?.label
+            ?: devices.firstOrNull { it.isCandidate }?.label
+    }
+
+    /** Dismisses the "IR module connected" popup; optionally never show it again. */
+    fun dismissPopup(dontShowAgain: Boolean) {
+        _showUsbPopup.value = false
+        if (dontShowAgain) {
+            popupSuppressed = true
+            appContext?.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                ?.edit()?.putBoolean(KEY_POPUP_DISABLED, true)?.apply()
         }
     }
 
@@ -567,6 +610,7 @@ object UsbIrManager {
         val route = runCatching { Route.valueOf(prefs.getString(KEY_ROUTE, Route.AUTO.name)!!) }
             .getOrDefault(Route.AUTO)
         val allowGeneric = prefs.getBoolean(KEY_ALLOW_GENERIC, false)
+        popupSuppressed = prefs.getBoolean(KEY_POPUP_DISABLED, false)
         _state.update { it.copy(route = route, allowGeneric = allowGeneric) }
     }
 

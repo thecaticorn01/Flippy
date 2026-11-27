@@ -783,6 +783,17 @@ fun MainScreen(
         }
     }
 
+    // "IR module connected" popup when an external USB-C IR blaster is attached.
+    val showUsbIrPopup by com.droid.flippy.ir.usb.UsbIrManager.showUsbPopup.collectAsState()
+    if (showUsbIrPopup) {
+        UsbIrConnectedBottomSheet(
+            deviceName = com.droid.flippy.ir.usb.UsbIrManager.connectedIrLabel(),
+            onDismiss = { dontShowAgain ->
+                com.droid.flippy.ir.usb.UsbIrManager.dismissPopup(dontShowAgain)
+            },
+        )
+    }
+
     NavHost(
         navController = navController,
         startDestination = "main_scaffold",
@@ -3075,6 +3086,96 @@ fun LevelUpAnimation(modifier: Modifier = Modifier) {
         modifier = modifier,
         contentScale = ContentScale.Fit
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun UsbIrConnectedBottomSheet(
+    deviceName: String?,
+    onDismiss: (dontShowAgain: Boolean) -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var dontShowAgain by remember { mutableStateOf(false) }
+    val accentColor = MaterialTheme.colorScheme.primary
+
+    ModalBottomSheet(
+        onDismissRequest = { onDismiss(dontShowAgain) },
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(top = 8.dp, bottom = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = accentColor.copy(alpha = 0.15f),
+                modifier = Modifier.size(68.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Usb,
+                        contentDescription = "USB",
+                        tint = accentColor,
+                        modifier = Modifier.size(36.dp),
+                    )
+                }
+            }
+
+            Text(
+                text = stringResource(R.string.usb_ir_connected_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+            )
+
+            Text(
+                text = deviceName ?: stringResource(R.string.usb_ir_connected_desc),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { dontShowAgain = !dontShowAgain }
+                    .padding(vertical = 4.dp, horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Checkbox(
+                    checked = dontShowAgain,
+                    onCheckedChange = { dontShowAgain = it },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = accentColor,
+                        checkmarkColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.dont_show_again),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+
+            FlippyButton(
+                onClick = { onDismiss(dontShowAgain) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+            ) {
+                Text(text = "OK", fontWeight = FontWeight.Bold)
+            }
+        }
+    }
 }
 
 @Composable

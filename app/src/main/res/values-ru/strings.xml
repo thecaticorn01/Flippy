@@ -1394,4 +1394,9 @@
 
     <!-- Realistic device mode -->
     <string name="ble_btn_device_realistic">Реалистичное устройство (одно, стабильно)</string>
+
+    <!-- USB-C IR module connected popup -->
+    <string name="usb_ir_connected_title">Подключен IR модуль</string>
+    <string name="usb_ir_connected_desc">Внешний USB-C IR модуль готов к отправке команд</string>
+    <string name="dont_show_again">Больше не показывать</string>
 </resources>
