@@ -54,6 +54,11 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # Default is "tools platform-tools"; the legacy "tools" package was
+          # removed from the SDK repo and makes the action fail, so install
+          # only platform-tools here (the platform itself is installed below).
+          packages: 'platform-tools'
 
       - name: Install Android platform 36
         # The platform for the project's compileSdk/targetSdk (Android 16).
