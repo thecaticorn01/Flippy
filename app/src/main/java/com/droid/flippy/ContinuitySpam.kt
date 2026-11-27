@@ -175,8 +175,9 @@ class ContinuitySpam(
     /**
      * "Realistic device" path: advertise ONE model as a single, coherent
      * device. Colour and the 16-byte tail are frozen for the whole session,
-     * charging/lid are stable, and the battery drains one notch every
-     * [DRAIN_INTERVAL_MS] (recharging when low). The shared [BleSpamTx]
+     * charging/lid are stable, and the battery drains one notch roughly every
+     * 25–35 min (recharging when low), ~5 h for a full drain like real AirPods.
+     * The shared [BleSpamTx]
      * short-circuits identical frames, so the radio only restarts on the rare
      * battery tick — iOS sees a stable, plausible device rather than churn.
      */
@@ -189,14 +190,16 @@ class ContinuitySpam(
         val charging = 0x00 // not charging
         val lid = 0x01      // stable lid/open counter
 
+        fun nextDrainDelay() = DRAIN_BASE_MS + (rand.nextDouble() * DRAIN_JITTER_MS).toLong()
+
         var batteryLevel = 7 + rand.nextInt(3) // 70–90%
-        var nextDrainAt = android.os.SystemClock.elapsedRealtime() + DRAIN_INTERVAL_MS
+        var nextDrainAt = android.os.SystemClock.elapsedRealtime() + nextDrainDelay()
 
         while (isSpamming) {
             val now = android.os.SystemClock.elapsedRealtime()
             if (now >= nextDrainAt) {
                 batteryLevel = if (batteryLevel <= 2) 7 + rand.nextInt(3) else batteryLevel - 1
-                nextDrainAt = now + DRAIN_INTERVAL_MS
+                nextDrainAt = now + nextDrainDelay()
             }
             val budsByte = (batteryLevel shl 4) or batteryLevel
             val payload = ContinuityPayloads.devicePayloadStable(
@@ -243,8 +246,12 @@ class ContinuitySpam(
         private const val TAG = "ContinuitySpam"
         private const val DWELL_MS = 2_500L
         private const val GAP_MS = 500L
-        /** How often the realistic device's battery drops a notch. */
-        private const val DRAIN_INTERVAL_MS = 45_000L
+        // Realistic battery drain: one 10% notch roughly every 25–35 min, i.e.
+        // ~5 h for a full drain, matching real AirPods. Over a normal spam
+        // session the level barely moves, which is exactly what a real nearby
+        // device looks like.
+        private const val DRAIN_BASE_MS = 25 * 60_000L
+        private const val DRAIN_JITTER_MS = 10 * 60_000L
 
         private val DEVICE_DATA = HashMap<String, String>().apply {
             put("0E20", "AirPods Pro")
