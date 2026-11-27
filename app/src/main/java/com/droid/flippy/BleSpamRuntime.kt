@@ -208,7 +208,7 @@ object BleSpamRuntime {
         return when (type) {
             SpamType.CONTINUITY -> {
                 val mode = subtype as? ContinuityMode ?: ContinuityMode(ContinuityType.DEVICE, false)
-                ContinuitySpam(mode.type, mode.crashMode)
+                ContinuitySpam(mode.type, mode.crashMode, realistic = mode.realistic)
             }
             SpamType.EASY_SETUP -> EasySetupSpam(subtype as? EasySetupDevice.Type ?: EasySetupDevice.Type.BUDS)
             SpamType.FAST_PAIR -> FastPairSpam()
@@ -222,6 +222,7 @@ object BleSpamRuntime {
         return when (section) {
             BleSection.IOS -> listOf(
                 Pair(SpamType.CONTINUITY, ContinuityMode(ContinuityType.DEVICE, false)),
+                Pair(SpamType.CONTINUITY, ContinuityMode(ContinuityType.DEVICE, false, realistic = true)),
                 Pair(SpamType.CONTINUITY, ContinuityMode(ContinuityType.NOTYOURDEVICE, false)),
                 Pair(SpamType.CONTINUITY, ContinuityMode(ContinuityType.ACTION, false)),
                 Pair(SpamType.CONTINUITY, ContinuityMode(ContinuityType.ACTION, true))

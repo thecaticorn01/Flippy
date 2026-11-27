@@ -94,6 +94,43 @@ internal object ContinuityPayloads {
     }
 
     /**
+     * Proximity-pairing frame with EXPLICIT state, for the "realistic device"
+     * mode: the caller supplies fixed battery/charging/lid/color and a fixed
+     * 16-byte tail so the frame stays coherent across time (slow battery drain
+     * only), instead of the per-call randomization [devicePayload] does. This
+     * makes iOS see one plausible, stable device rather than spam churn.
+     *
+     * [budsByte]/[chargingByte]/[lidByte] are raw status bytes; [tailHex] is 32
+     * hex chars (16 bytes).
+     */
+    fun devicePayloadStable(
+        deviceIdHex: String,
+        colorHex: String,
+        budsByte: Int,
+        chargingByte: Int,
+        lidByte: Int,
+        tailHex: String,
+    ): ByteArray {
+        val isAirTag = deviceIdHex == "0055" || deviceIdHex == "0030"
+        val prefix = if (isAirTag) "05" else "01"
+        val color = if (prefix == "01") colorHex else "00"
+        val payloadHex = buildString {
+            append("07")
+            append("19")
+            append(prefix)
+            append(deviceIdHex)
+            append("55")
+            append(toHexByte(budsByte))
+            append(toHexByte(chargingByte))
+            append(toHexByte(lidByte))
+            append(color)
+            append("00")
+            append(tailHex)
+        }
+        return Helper.convertHexToByteArray(payloadHex)
+    }
+
+    /**
      * "Not your device"/AirTag frame (`07 19` + 25 bytes). AirTags use the
      * `05` prefix; other people's devices use `01`.
      */

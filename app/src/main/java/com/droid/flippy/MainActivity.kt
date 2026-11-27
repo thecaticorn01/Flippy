@@ -146,7 +146,13 @@ enum class SpamType {
 
 data class ContinuityMode(
     val type: ContinuityType,
-    val crashMode: Boolean = false
+    val crashMode: Boolean = false,
+    /**
+     * When true, advertise ONE model as a single stable device with coherent,
+     * slowly-draining battery instead of hopping models with random state
+     * every dwell — so iOS sees a plausible real device rather than spam churn.
+     */
+    val realistic: Boolean = false,
 )
 
 enum class BleSection(val title: String, val route: String) {
@@ -2786,6 +2792,27 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
                             // whole-mode legacy instance, so stop them first.
                             viewModel.bleItems.stopSection(BleSection.IOS.route)
                             viewModel.toggleBleSpam(SpamType.CONTINUITY, deviceMode)
+                        }
+                    }
+                },
+                blinkIntervalMs = bleDelay.toLong(),
+                modifier = Modifier.fillMaxWidth(),
+                fullyRounded = true
+            )
+        }
+        item {
+            val realisticMode = ContinuityMode(ContinuityType.DEVICE, false, realistic = true)
+            val isRealisticActive = spammingStates[Pair(SpamType.CONTINUITY, realisticMode)] == true
+            AnimatedBleButton(
+                text = stringResource(R.string.ble_btn_device_realistic),
+                isActive = isRealisticActive,
+                onClick = {
+                    gate.acquire {
+                        if (isRealisticActive) {
+                            viewModel.toggleBleSpam(SpamType.CONTINUITY, realisticMode)
+                        } else {
+                            viewModel.bleItems.stopSection(BleSection.IOS.route)
+                            viewModel.toggleBleSpam(SpamType.CONTINUITY, realisticMode)
                         }
                     }
                 },
