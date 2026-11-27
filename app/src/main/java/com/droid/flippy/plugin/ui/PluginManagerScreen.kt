@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -69,6 +70,9 @@ fun PluginManagerScreen(navController: NavController) {
                 accentColor = MaterialTheme.colorScheme.primary,
                 alwaysCollapsed = true,
                 actions = {
+                    FlippyIconButton(onClick = { navController.navigate("plugin_store") }) {
+                        Icon(Icons.Default.Storefront, stringResource(R.string.pmanager_plugin_store))
+                    }
                     FlippyIconButton(onClick = { navController.navigate("plugin_security") }) {
                         Icon(Icons.Default.Settings, stringResource(R.string.plugin_settings_title))
                     }

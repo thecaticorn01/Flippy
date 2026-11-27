@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
@@ -254,6 +255,11 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/whisperpair_file_paths" />
         </provider>
+
+        <!-- Google Cast SDK options provider (TV Cast / Cast SDK screen ported from Dolphy) -->
+        <meta-data
+            android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
+            android:value="com.droid.flippy.castsdk.FlippyCastOptionsProvider" />
     </application>
 
 </manifest>

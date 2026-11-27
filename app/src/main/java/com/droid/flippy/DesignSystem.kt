@@ -711,6 +711,7 @@ fun MaterialCard(
     containerType: String = "surface",
     contentPadding: Dp = 16.dp,
     shape: Shape? = null,
+    onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -723,19 +724,31 @@ fun MaterialCard(
         "highest" -> colorScheme.surfaceContainerHighest
         else -> colorScheme.surfaceContainerHigh
     }
+    val colors = CardDefaults.cardColors(containerColor = containerColor)
+    val cardElevation = CardDefaults.cardElevation(defaultElevation = elevation)
 
-    Card(
-        modifier = modifier,
-        shape = resolvedShape,
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = elevation
-        )
-    ) {
-        Box(modifier = Modifier.padding(contentPadding)) {
-            content()
+    if (onClick != null) {
+        Card(
+            onClick = onClick,
+            modifier = modifier,
+            shape = resolvedShape,
+            colors = colors,
+            elevation = cardElevation,
+        ) {
+            Box(modifier = Modifier.padding(contentPadding)) {
+                content()
+            }
+        }
+    } else {
+        Card(
+            modifier = modifier,
+            shape = resolvedShape,
+            colors = colors,
+            elevation = cardElevation,
+        ) {
+            Box(modifier = Modifier.padding(contentPadding)) {
+                content()
+            }
         }
     }
 }

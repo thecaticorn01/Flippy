@@ -96,6 +96,7 @@ import com.droid.flippy.network.CameraNetworkResultsScreen
 import com.droid.flippy.network.CameraNetworkScanScreen
 import com.droid.flippy.network.LanScannerScreen
 import com.droid.flippy.network.LanToolsScreen
+import com.droid.flippy.network.MyCamScreen
 import com.droid.flippy.network.NetworkDiagnosticHubScreen
 import com.droid.flippy.nfc.NfcViewModel
 import com.droid.flippy.nfc.NfcViewModelFactory
@@ -1015,6 +1016,10 @@ fun MainScaffold(
             composable("other/wifi_print") { WifiPrintScreen(screenNavController) }
             composable("smarttv_cast") { SmartTvCastScreen(screenNavController) }
             composable("other/smarttv_cast") { SmartTvCastScreen(screenNavController) }
+            composable("my_cam") { MyCamScreen(screenNavController) }
+            composable("other/my_cam") { MyCamScreen(screenNavController) }
+            composable("tv_cast_sdk") { com.droid.flippy.castsdk.SmartTvCastScreen(screenNavController) }
+            composable("other/tv_cast_sdk") { com.droid.flippy.castsdk.SmartTvCastScreen(screenNavController) }
 
             composable("ble_section/{section}") { backStackEntry ->
                 val sectionRoute = backStackEntry.arguments?.getString("section") ?: return@composable
@@ -1094,17 +1099,8 @@ fun MainScaffold(
             composable("other/flippy_chat") {
                 com.droid.flippy.chat.GlobalChatScreen(screenNavController)
             }
-            composable("other/flippy_chat_main/{userName}") { backStackEntry ->
-                val userName = backStackEntry.arguments?.getString("userName") ?: return@composable
-                com.droid.flippy.chat.FlippyChatMainScreen(userName, screenNavController)
-            }
             composable("other/flippy_chat_global") {
                 com.droid.flippy.chat.GlobalChatScreen(screenNavController)
-            }
-            composable("other/flippy_chat_conversation/{userId}/{userName}") { backStackEntry ->
-                val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
-                val userName = backStackEntry.arguments?.getString("userName") ?: return@composable
-                com.droid.flippy.chat.FlippyChatConversationScreen(userId, userName, screenNavController)
             }
 
             composable("ir_tv_home") { IRTvHome(screenNavController) }
@@ -1273,6 +1269,13 @@ fun MainScaffold(
 
             composable("plugin_security") {
                 com.droid.flippy.plugin.ui.PluginSecurityScreen(navController = screenNavController)
+            }
+
+            composable("plugin_store") {
+                com.droid.flippy.plugin.store.PluginStoreScreen(navController = screenNavController)
+            }
+            composable("plugin_store_detail") {
+                com.droid.flippy.plugin.store.PluginStoreDetailScreen(navController = screenNavController)
             }
 
             composable("plugin_about") {
@@ -1505,7 +1508,9 @@ private fun isSettingsSectionRoute(route: String): Boolean {
 
     if (route == "plugin_manager" || route == "plugin_security" ||
         route == "plugin_about" ||
-        route == "plugin_install_helper"
+        route == "plugin_install_helper" ||
+        route == "plugin_store" ||
+        route == "plugin_store_detail"
     ) {
         return true
     }
@@ -1520,7 +1525,7 @@ private fun isOtherSectionRoute(route: String): Boolean {
 
     if (route.startsWith("plugin/")) return true
 
-    if (route == "plugin_manager" || route == "plugin_security" || route == "plugin_about" || route == "plugin_install_helper") {
+    if (route == "plugin_manager" || route == "plugin_security" || route == "plugin_about" || route == "plugin_install_helper" || route == "plugin_store" || route == "plugin_store_detail") {
         return false
     }
 

@@ -78,6 +78,8 @@ fun functionDestinationSections(): List<Pair<String, List<FunctionDestination>>>
         FunctionDestination(Icons.Default.QrCodeScanner, stringResource(R.string.other_qr_tools), stringResource(R.string.other_qr_tools_desc), "other/qr_tools", OtherSections.OTHER),
         FunctionDestination(Icons.Filled.WifiOff, stringResource(R.string.network_hub_title), stringResource(R.string.network_hub_card_description), "other/network_diagnostic_hub", OtherSections.OTHER),
         FunctionDestination(Icons.Default.Cast, stringResource(R.string.smarttv_cast_title), stringResource(R.string.smarttv_cast_card_description), "other/smarttv_cast", OtherSections.OTHER),
+        FunctionDestination(Icons.Default.Videocam, stringResource(R.string.my_cam_title), stringResource(R.string.my_cam_entry_desc), "other/my_cam", OtherSections.OTHER),
+        FunctionDestination(Icons.Default.CastConnected, stringResource(R.string.cast_sdk_card_title), stringResource(R.string.cast_sdk_card_desc), "other/tv_cast_sdk", OtherSections.OTHER),
         FunctionDestination(Icons.Default.Router, stringResource(R.string.lan_tools_title), stringResource(R.string.lan_tools_subtitle), "other/lan_scanner", OtherSections.OTHER),
     ) + plugins(OtherSections.OTHER)
 
