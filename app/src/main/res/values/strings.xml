@@ -1453,5 +1453,5 @@
     <string name="ble_txpower_low">Low</string>
     <string name="ble_txpower_medium">Med</string>
     <string name="ble_txpower_high">High</string>
-    <string name="ble_txpower_hint">Apple pop-ups are gated on distance. Use a low power and hold the phone right against the target so the signal reads as a nearby device. High keeps range for the other targets.</string>
+    <string name="ble_txpower_hint">The iPhone judges closeness from how strong your signal is when it arrives — there is no value we can fake in the packet. Use High: a strong signal from a foot or two already reads as a nearby device, so you don’t need to touch the phones. Lower it only if you are point-blank and want a smaller radius.</string>
 </resources>

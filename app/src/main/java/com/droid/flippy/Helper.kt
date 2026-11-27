@@ -21,12 +21,13 @@ object Helper {
     var hardwareExtendedBroken: Boolean = false
 
     /**
-     * Advertising TX power for BLE spam. Apple proximity pairing is gated on
-     * the received signal strength vs. an implied distance, so a weaker signal
-     * (phone held against the target) reads as a genuinely-adjacent device,
-     * whereas TX_POWER_HIGH from a distance reads as "too far / implausible"
-     * and modern iOS ignores it. Defaults to HIGH to preserve range for the
-     * non-Apple vectors; the user can lower it from the BLE spam screen.
+     * Advertising TX power for BLE spam. Proximity pop-ups (Apple and others)
+     * are gated on the received signal strength (RSSI): there is no distance
+     * value in the frame to forge, so the ONLY lever is real transmit power.
+     * Higher power = stronger RSSI at a given distance = the target reads the
+     * device as nearer, which enlarges the effective trigger radius (a foot or
+     * two instead of touching). Defaults to HIGH, the strongest the platform
+     * API allows; lowering it only shrinks the radius.
      */
     var txPower = AdvertiseSettings.ADVERTISE_TX_POWER_HIGH
 

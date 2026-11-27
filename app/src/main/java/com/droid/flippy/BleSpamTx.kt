@@ -235,8 +235,9 @@ object BleSpamTx {
     private fun makeSettings(pending: Pending): AdvertiseSettings =
         AdvertiseSettings.Builder()
             .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-            // User-selectable: lower power narrows the implied proximity, which
-            // Apple's proximity-pairing popups gate on (see Helper.txPower).
+            // User-selectable: higher power = stronger RSSI = the target reads
+            // the device as nearer, enlarging the proximity-popup trigger radius
+            // (see Helper.txPower). HIGH is the API maximum.
             .setTxPowerLevel(Helper.txPower)
             .setConnectable(pending.connectable)
             .setTimeout(0)

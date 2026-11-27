@@ -2678,9 +2678,10 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
 
 
         item {
-            // TX power / proximity control. Lower power makes Apple proximity
-            // pairing read the phone as a genuinely-adjacent device (hold it
-            // against the target); High keeps range for the other vectors.
+            // TX power / proximity control. Higher power = stronger RSSI at the
+            // target = it reads the device as nearer, so High gives the largest
+            // trigger radius (works a foot or two away without touching). Lower
+            // settings only shrink the radius.
             val options = listOf(
                 AdvertiseSettings.ADVERTISE_TX_POWER_ULTRA_LOW to stringResource(R.string.ble_txpower_ultralow),
                 AdvertiseSettings.ADVERTISE_TX_POWER_LOW to stringResource(R.string.ble_txpower_low),
