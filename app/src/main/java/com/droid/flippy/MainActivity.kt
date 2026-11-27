@@ -2995,60 +2995,6 @@ fun WelcomeDialog(
 }
 
 @Composable
-fun PluginSystemWarningDialog(onConfirm: () -> Unit) {
-    var secondsRemaining by remember { mutableIntStateOf(10) }
-
-    LaunchedEffect(Unit) {
-        while (secondsRemaining > 0) {
-            delay(1000)
-            secondsRemaining--
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = {},
-        icon = {
-            Icon(
-                imageVector = Icons.Default.Security,
-                contentDescription = null,
-                modifier = Modifier.size(36.dp),
-            )
-        },
-        title = {
-            Text(
-                text = stringResource(R.string.plugin_system_warning_title),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-            )
-        },
-        text = {
-            Text(
-                text = stringResource(R.string.plugin_system_warning_text),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        },
-        confirmButton = {
-            AccentButton(
-                onClick = onConfirm,
-                enabled = secondsRemaining == 0,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-            ) {
-                Text(
-                    if (secondsRemaining > 0) {
-                        stringResource(R.string.plugin_system_warning_countdown, secondsRemaining)
-                    } else {
-                        stringResource(R.string.welcome_dialog_btn_ok)
-                    }
-                )
-            }
-        },
-        shape = RoundedCornerShape(28.dp),
-    )
-}
-
-@Composable
 fun SettingsScreen(spamViewModel: SpamViewModel, flippyViewModel: FlippyViewModel, navController: NavController) {
     val bottomScrollPadding = 180.dp
     val isDarkTheme by spamViewModel.isDarkTheme.collectAsState()

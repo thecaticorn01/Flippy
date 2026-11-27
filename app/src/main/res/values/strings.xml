@@ -1297,9 +1297,6 @@
     <string name="plugin_download_unknown_size">unknown size</string>
     <string name="plugin_documentation_site">Documentation website</string>
     <string name="plugin_open_with_hint">Open the plugin file with “Open with” and select Flippy to install it</string>
-    <string name="plugin_system_warning_title">Flippy 2.5 plugin system</string>
-    <string name="plugin_system_warning_text">This version introduces a powerful plugin system with broad freedom of action. The price of that freedom and extensive capability is security. Install plugins only from trusted sources and check them for malicious code. The developer is not responsible for damage caused by malicious code in a user plugin.</string>
-    <string name="plugin_system_warning_countdown">OK (%1$d)</string>
     <string name="plugin_preview_permissions">Capabilities and access</string>
     <string name="plugin_preview_permissions_none">No special capabilities were detected in the code</string>
     <string name="plugin_capability_dex">DEX loading and class access</string>
