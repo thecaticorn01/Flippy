@@ -1439,4 +1439,11 @@
     <!-- TV cast submenu -->
     <string name="cast_menu_title">TV Casting</string>
     <string name="cast_menu_desc">Cast video to your TV via Chromecast, DIAL, DLNA or the Cast SDK</string>
+
+    <!-- BLE spam status + iOS hardening note -->
+    <string name="ble_status_on_title">Transmitting</string>
+    <string name="ble_status_on_body">The radio is advertising. Tap an active target again, or “Stop all”, to stop.</string>
+    <string name="ble_status_off_title">Idle</string>
+    <string name="ble_status_off_body">Nothing is transmitting. Tap a target below to start advertising.</string>
+    <string name="ble_ios_hardening_note">Apple hardened these pop-ups in iOS 17.2+. Up-to-date iPhones (incl. iPhone 15/16/17) usually will not show them even though the app is advertising correctly — test against an older/vulnerable device to confirm transmission.</string>
 </resources>

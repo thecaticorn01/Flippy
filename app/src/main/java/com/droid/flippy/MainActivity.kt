@@ -2547,6 +2547,52 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
         }
 
         item {
+            // Unmistakable on/off banner: the whole card turns the accent
+            // (primaryContainer) colour and the dot lights up whenever ANY BLE
+            // source is transmitting, so it is always obvious what state the
+            // radio is in without hunting through individual toggles.
+            val transmitting = txState.onAir || anythingBleActive
+            MaterialCard(
+                modifier = Modifier.fillMaxWidth(),
+                accentColor = accent,
+                containerType = if (transmitting) "primary" else "low",
+                cornerRadius = 20.dp,
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(18.dp)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (transmitting) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (transmitting) stringResource(R.string.ble_status_on_title)
+                            else stringResource(R.string.ble_status_off_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                        Text(
+                            text = if (transmitting) stringResource(R.string.ble_status_on_body)
+                            else stringResource(R.string.ble_status_off_body),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
+
+        item {
             MaterialCard(
                 modifier = Modifier.fillMaxWidth(),
                 accentColor = accent,
@@ -2632,6 +2678,32 @@ fun BleSpamScreen(viewModel: SpamViewModel, onSectionClick: (BleSection) -> Unit
 
         item {
             BleSectionHeader(section = BleSection.IOS) { onSectionClick(BleSection.IOS) }
+        }
+        item {
+            MaterialCard(
+                modifier = Modifier.fillMaxWidth(),
+                accentColor = accent,
+                cornerRadius = 12.dp,
+                containerType = "low",
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        Icons.Default.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = stringResource(R.string.ble_ios_hardening_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         }
         item {
             val deviceMode = ContinuityMode(ContinuityType.DEVICE, false)
