@@ -1,0 +1,117 @@
+name: Build & Release APK
+
+# Builds the release APK against the latest Android SDK the project targets
+# (compileSdk/targetSdk 36 = Android 16) and publishes it as a GitHub Release.
+#
+# How releases are produced:
+#   * Push a tag like `v2.7`  -> a normal release tagged with that tag.
+#   * Run manually (workflow_dispatch) -> a prerelease tagged `nightly-<run>`.
+#
+# Signing (optional): add these repository secrets to sign with your own key.
+# Without them the release APK is signed with the debug key so it still installs.
+#   RELEASE_KEYSTORE_BASE64   - base64 of your keystore (.jks): `base64 -w0 key.jks`
+#   RELEASE_KEYSTORE_PASSWORD - keystore password
+#   RELEASE_KEY_ALIAS         - key alias
+#   RELEASE_KEY_PASSWORD      - key password
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Optional tag name for the release (defaults to nightly-<run>)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Python (required by Chaquopy)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android platform 36
+        # The platform for the project's compileSdk/targetSdk (Android 16).
+        # Matching build-tools and NDK are downloaded automatically by AGP.
+        run: sdkmanager "platforms;android-36"
+
+      - name: Configure Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode release keystore (if provided)
+        if: ${{ env.RELEASE_KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "RELEASE_KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          echo "RELEASE_KEYSTORE_PASSWORD=${{ secrets.RELEASE_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "RELEASE_KEY_ALIAS=${{ secrets.RELEASE_KEY_ALIAS }}" >> "$GITHUB_ENV"
+          echo "RELEASE_KEY_PASSWORD=${{ secrets.RELEASE_KEY_PASSWORD }}" >> "$GITHUB_ENV"
+
+      - name: Determine release metadata
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            tag="${{ github.event.inputs.tag }}"
+            [ -z "$tag" ] && tag="nightly-${{ github.run_number }}"
+            echo "tag=$tag" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build release APK
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+
+      - name: Collect APK
+        id: apk
+        run: |
+          src="$(find app/build/outputs/apk/release -name '*.apk' | head -n1)"
+          if [ -z "$src" ]; then echo "No APK produced" >&2; exit 1; fi
+          mkdir -p dist
+          dest="dist/Flippy-${{ steps.meta.outputs.tag }}.apk"
+          cp "$src" "$dest"
+          echo "path=$dest" >> "$GITHUB_OUTPUT"
+          ( cd dist && sha256sum "Flippy-${{ steps.meta.outputs.tag }}.apk" > "Flippy-${{ steps.meta.outputs.tag }}.apk.sha256" )
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flippy-release-apk
+          path: dist/*
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: Flippy ${{ steps.meta.outputs.tag }}
+          prerelease: ${{ steps.meta.outputs.prerelease }}
+          generate_release_notes: true
+          files: |
+            dist/*.apk
+            dist/*.apk.sha256

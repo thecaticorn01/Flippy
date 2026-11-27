@@ -36,6 +36,22 @@ android {
     }
 
 
+    signingConfigs {
+        // Release signing is driven by environment variables so CI can inject a
+        // keystore from GitHub secrets. When they are absent (e.g. a local build
+        // or a fork without secrets) the release falls back to the debug key so
+        // the produced APK is still installable.
+        create("release") {
+            val storePath = System.getenv("RELEASE_KEYSTORE_FILE")
+            if (!storePath.isNullOrBlank()) {
+                storeFile = file(storePath)
+                storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+                keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         debug {
 
@@ -45,6 +61,10 @@ android {
 
         }
         release {
+            signingConfig = if (!System.getenv("RELEASE_KEYSTORE_FILE").isNullOrBlank())
+                signingConfigs.getByName("release")
+            else
+                signingConfigs.getByName("debug")
             isCrunchPngs = false
             isMinifyEnabled = true
             isShrinkResources = true
