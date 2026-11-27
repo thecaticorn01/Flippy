@@ -30,6 +30,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Radar
 import androidx.compose.material.icons.filled.Router
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.WarningAmber
@@ -98,6 +99,12 @@ fun LanToolsScreen(navController: NavController) {
             stringResource(R.string.wifi_print_title),
             stringResource(R.string.wifi_print_hero_desc),
             "other/wifi_print",
+        ),
+        LanToolEntry(
+            Icons.Default.PhotoCamera,
+            stringResource(R.string.my_cam_title),
+            stringResource(R.string.my_cam_entry_desc),
+            "other/my_cam",
         ),
     )
     MaterialBackground(accentColor = accent) {

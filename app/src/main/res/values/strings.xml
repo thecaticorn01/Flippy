@@ -1438,4 +1438,8 @@
     <string name="chat_status_connected">Connected</string>
     <string name="chat_status_offline">Offline</string>
     <string name="chat_status_scanning">Scanning…</string>
+
+    <!-- TV cast submenu -->
+    <string name="cast_menu_title">TV Casting</string>
+    <string name="cast_menu_desc">Cast video to your TV via Chromecast, DIAL, DLNA or the Cast SDK</string>
 </resources>

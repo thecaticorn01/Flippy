@@ -761,7 +761,9 @@ fun MainScreen(
 
     if (lastSeenVersion != currentVersion) {
         if (currentVersion == "2.5") {
-            PluginSystemWarningDialog(onConfirm = { spamViewModel.completeWelcomeDialog() })
+            // First-launch plugin system prompt removed: silently mark this
+            // version as seen so the dialog block does not re-trigger.
+            LaunchedEffect(Unit) { spamViewModel.completeWelcomeDialog() }
         } else {
             WelcomeDialog(
                 onDismiss = { spamViewModel.completeWelcomeDialog() },
@@ -1014,6 +1016,8 @@ fun MainScaffold(
             composable("other/lan_camera_results") { CameraNetworkResultsScreen(screenNavController) }
             composable("wifi_print") { WifiPrintScreen(screenNavController) }
             composable("other/wifi_print") { WifiPrintScreen(screenNavController) }
+            composable("tv_cast_menu") { CastMenuScreen(screenNavController) }
+            composable("other/tv_cast_menu") { CastMenuScreen(screenNavController) }
             composable("smarttv_cast") { SmartTvCastScreen(screenNavController) }
             composable("other/smarttv_cast") { SmartTvCastScreen(screenNavController) }
             composable("my_cam") { MyCamScreen(screenNavController) }
